@@ -1,0 +1,1 @@
+export default function StudentRow() { return <tr><td>Student</td></tr>; }
