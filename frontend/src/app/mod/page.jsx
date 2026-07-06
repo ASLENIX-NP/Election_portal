@@ -21,7 +21,32 @@ export default function ModDashboard() {
       setResetPin('');
     }
   };
-
+const dashboardStats = [
+  {
+    title: "Verified Today",
+    value: 1248,
+    color: "#2563EB",
+    icon: "👤",
+  },
+  {
+    title: "Currently Voting",
+    value: 42,
+    color: "#16A34A",
+    icon: "🗳",
+  },
+  {
+    title: "Open Alerts",
+    value: 3,
+    color: "#DC2626",
+    icon: "🚨",
+  },
+  {
+    title: "Support Requests",
+    value: 5,
+    color: "#F59E0B",
+    icon: "📩",
+  },
+];
   return (
     <div>
       <div className="page-header" style={{ marginBottom: '2rem' }}>
@@ -31,11 +56,81 @@ export default function ModDashboard() {
           </h1>
           <p>Monitor election integrity and manage voter access.</p>
         </div>
-        <div className="badge active" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)' }}>
-          3 Active Alerts
-        </div>
-      </div>
 
+      </div>
+         return (
+  <div>
+
+    {/* Page Header */}
+    <div className="page-header" style={{ marginBottom: "2rem" }}>
+      <div>
+        <h1>Moderator Dashboard</h1>
+        <p>
+          Monitor voter verification, election activity, and security incidents.
+        </p>
+      </div>
+    </div>
+
+    {/* ADD THE DASHBOARD STATS HERE 👇 */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: "1rem",
+        marginBottom: "2rem",
+      }}
+    >
+      {dashboardStats.map((stat) => (
+        <Card
+          key={stat.title}
+          style={{
+            padding: "1.5rem",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "1.8rem",
+              marginBottom: "12px",
+            }}
+          >
+            {stat.icon}
+          </div>
+
+          <h2
+            style={{
+              margin: 0,
+              color: stat.color,
+              fontSize: "2rem",
+            }}
+          >
+            {stat.value}
+          </h2>
+
+          <p
+            style={{
+              marginTop: "8px",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {stat.title}
+          </p>
+        </Card>
+      ))}
+    </div>
+
+    {/* Existing Two-Column Layout */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "2fr 1fr",
+        gap: "2rem",
+      }}
+    >
+      ...
+    </div>
+
+  </div>
+);
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
         
         {/* Flagged Activity Log */}
@@ -66,39 +161,97 @@ export default function ModDashboard() {
           </div>
         </div>
 
-        {/* Action Panel */}
-        <div>
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Quick Actions</h2>
-          <Card>
-            <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
-              <KeyRound size={18} color="var(--accent-cyan)" /> Reset Voter PIN
-            </h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Invalidate the current PIN for a student and issue a new one.
-            </p>
-            <form onSubmit={handleReset}>
-              <div className="form-group">
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="Student ID (e.g. S-12345)"
-                  value={resetPin}
-                  onChange={(e) => setResetPin(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                <RefreshCcw size={16} /> Force Reset PIN
-              </button>
-            </form>
-            
-            {resetStatus === 'success' && (
-              <div style={{ marginTop: '1rem', padding: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--success)' }}>
-                <CheckCircle2 size={18} /> PIN Reset successfully.
-              </div>
-            )}
-          </Card>
-        </div>
+{/* Student Verification */}
+<div>
+  <h2
+    style={{
+      fontSize: "1.25rem",
+      marginBottom: "1rem",
+      color: "var(--text-primary)",
+    }}
+  >
+    Student Verification
+  </h2>
+
+  <Card style={{ padding: "1.5rem" }}>
+    <h3
+      style={{
+        fontSize: "1.1rem",
+        marginBottom: "0.5rem",
+      }}
+    >
+      Verify Student
+    </h3>
+
+    <p
+      style={{
+        color: "var(--text-secondary)",
+        fontSize: "0.9rem",
+        marginBottom: "1.5rem",
+      }}
+    >
+      Search a student before allowing access to the voting booth.
+    </p>
+
+    <div className="form-group">
+      <input
+        className="form-control"
+        type="text"
+        placeholder="Enter Student ID"
+      />
+    </div>
+
+    <button
+      className="btn btn-primary"
+      style={{
+        width: "100%",
+        justifyContent: "center",
+      }}
+    >
+      Search Student
+    </button>
+
+    <hr style={{ margin: "24px 0" }} />
+
+    <div style={{ display: "grid", gap: "14px" }}>
+      <div>
+        <small>Name</small>
+        <div style={{ fontWeight: 600 }}>—</div>
+      </div>
+
+      <div>
+        <small>Faculty</small>
+        <div style={{ fontWeight: 600 }}>—</div>
+      </div>
+
+      <div>
+        <small>Semester</small>
+        <div style={{ fontWeight: 600 }}>—</div>
+      </div>
+
+      <div>
+        <small>Verification Status</small>
+        <div className="badge">Not Verified</div>
+      </div>
+
+      <div>
+        <small>Voting Status</small>
+        <div className="badge">Not Voted</div>
+      </div>
+    </div>
+
+    <button
+      className="btn btn-success"
+      style={{
+        marginTop: "24px",
+        width: "100%",
+        justifyContent: "center",
+      }}
+    >
+      Verify Identity
+    </button>
+  </Card>
+</div>
       </div>
     </div>
   );
