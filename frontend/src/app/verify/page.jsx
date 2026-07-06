@@ -30,7 +30,7 @@ export default function VerifyPage() {
         </div>
 
         <Card>
-          <form onSubmit={handleVerify}>
+          <form onSubmit={handleVerify}>   
             <div className="form-group">
               <label>Receipt Hash</label>
               <div style={{ position: 'relative' }}>

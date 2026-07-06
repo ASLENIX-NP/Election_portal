@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Card } from '../../components/ui/Card';
-import { ShieldCheck, MonitorPlay, XCircle, Search, CheckCircle2, UserCheck } from 'lucide-react';
+import {
+  ShieldCheck,
+  MonitorPlay,
+  XCircle,
+  Search,
+  CheckCircle2,
+  UserCheck,
+  AlertTriangle
+} from "lucide-react";
 import { useKioskContext } from '../../context/KioskContext';
 
 export default function ModDashboard() {
@@ -72,79 +80,7 @@ const dashboardStats = [
         </div>
 
       </div>
-         return (
-  <div>
 
-    {/* Page Header */}
-    <div className="page-header" style={{ marginBottom: "2rem" }}>
-      <div>
-        <h1>Moderator Dashboard</h1>
-        <p>
-          Monitor voter verification, election activity, and security incidents.
-        </p>
-      </div>
-    </div>
-
-    {/* ADD THE DASHBOARD STATS HERE 👇 */}
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "1rem",
-        marginBottom: "2rem",
-      }}
-    >
-      {dashboardStats.map((stat) => (
-        <Card
-          key={stat.title}
-          style={{
-            padding: "1.5rem",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "1.8rem",
-              marginBottom: "12px",
-            }}
-          >
-            {stat.icon}
-          </div>
-
-          <h2
-            style={{
-              margin: 0,
-              color: stat.color,
-              fontSize: "2rem",
-            }}
-          >
-            {stat.value}
-          </h2>
-
-          <p
-            style={{
-              marginTop: "8px",
-              color: "var(--text-secondary)",
-            }}
-          >
-            {stat.title}
-          </p>
-        </Card>
-      ))}
-    </div>
-
-    {/* Existing Two-Column Layout */}
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "2fr 1fr",
-        gap: "2rem",
-      }}
-    >
-      ...
-    </div>
-
-  </div>
-);
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
         
         {/* Flagged Activity Log */}
