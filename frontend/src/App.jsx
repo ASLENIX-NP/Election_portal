@@ -32,6 +32,7 @@ import ManageModerators from './app/admin/moderators/page';
 import AdminSettings from './app/admin/settings/page';
 import AdminLogin from './app/admin/login/page';
 import ManageBallot from './app/admin/ballot/page';
+import ManageBooths from './app/admin/booths/page';
 
 import ModDashboard from './app/mod/page';
 import VoteLogin from './app/vote/page';
@@ -66,6 +67,7 @@ function App() {
                   <Route path="candidates" element={<ManageCandidates />} />
                   <Route path="students" element={<ManageStudents />} />
                   <Route path="moderators" element={<ManageModerators />} />
+                  <Route path="booths" element={<ManageBooths />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
 

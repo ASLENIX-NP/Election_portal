@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, UserSquare2, Settings, ShieldCheck, LogOut, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Users, UserSquare2, Settings, ShieldCheck, LogOut, ClipboardList, MonitorPlay } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
 import { useElection } from '../../context/ElectionContext';
 
@@ -46,6 +46,10 @@ export default function AdminLayout() {
           <NavLink to="/admin/moderators" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <ShieldCheck size={20} />
             Manage Moderators
+          </NavLink>
+          <NavLink to="/admin/booths" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <MonitorPlay size={20} />
+            Manage Booths
           </NavLink>
           <NavLink to="/admin/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Settings size={20} />

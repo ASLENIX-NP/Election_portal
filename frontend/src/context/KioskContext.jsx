@@ -6,6 +6,12 @@ export function KioskProvider({ children }) {
   const [activeStudent, setActiveStudent] = useState(null); // The student enabled for voting
   const [kioskStatus, setKioskStatus] = useState('idle'); // 'idle', 'voting', 'completed'
   
+  // Voting Booths Management
+  const [booths, setBooths] = useState([
+    { id: 'booth-01', name: 'Terminal Alpha', location: 'Main Hall', status: 'idle' },
+    { id: 'booth-02', name: 'Terminal Beta', location: 'Main Hall', status: 'offline' }
+  ]);
+  
   const expirationTimer = useRef(null);
 
   const [roster, setRoster] = useState([
@@ -15,6 +21,18 @@ export function KioskProvider({ children }) {
     { id: 'S-1004', name: 'Diana Davis', grade: '10th', status: 'eligible' },
     { id: 'S-1005', name: 'Evan Evans', grade: '9th', status: 'eligible' },
   ]);
+
+  const addBooth = (newBooth) => {
+    setBooths([...booths, { ...newBooth, id: `booth-${Date.now()}`, status: 'offline' }]);
+  };
+
+  const removeBooth = (boothId) => {
+    setBooths(booths.filter(b => b.id !== boothId));
+  };
+
+  const updateBoothStatus = (boothId, newStatus) => {
+    setBooths(booths.map(b => b.id === boothId ? { ...b, status: newStatus } : b));
+  };
 
   const enableVoting = (studentId) => {
     setActiveStudent(studentId);
@@ -62,8 +80,9 @@ export function KioskProvider({ children }) {
 
   return (
     <KioskContext.Provider value={{
-      activeStudent, kioskStatus, roster, 
-      enableVoting, cancelVoting, authenticateVoter, markVoted, setKioskStatus
+      activeStudent, kioskStatus, roster, booths,
+      enableVoting, cancelVoting, authenticateVoter, markVoted, setKioskStatus,
+      addBooth, removeBooth, updateBoothStatus
     }}>
       {children}
     </KioskContext.Provider>
