@@ -1,17 +1,22 @@
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function ChartWidget({ data }) {
+export default function TrendChartWidget({ data }) {
   return (
-    <div className="chart-container" style={{ height: '100%', minHeight: '300px' }}>
+    <div className="chart-container" style={{ height: '100%', minHeight: '250px' }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
+        <AreaChart
           data={data}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-          barSize={40}
         >
+          <defs>
+            <linearGradient id="colorVotes" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="var(--accent)" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
           <XAxis 
-            dataKey="name" 
+            dataKey="time" 
             stroke="var(--text-secondary)"
             tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
             axisLine={{ stroke: 'var(--border-color)' }}
@@ -24,16 +29,11 @@ export default function ChartWidget({ data }) {
             tickLine={false}
           />
           <Tooltip 
-            cursor={{fill: 'var(--surface-hover)'}} 
             contentStyle={{ backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-            itemStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
+            itemStyle={{ color: 'var(--accent)', fontWeight: 600 }}
           />
-          <Bar dataKey="votes" radius={[4, 4, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color || 'var(--accent)'} />
-            ))}
-          </Bar>
-        </BarChart>
+          <Area type="monotone" dataKey="votes" stroke="var(--accent)" fillOpacity={1} fill="url(#colorVotes)" />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

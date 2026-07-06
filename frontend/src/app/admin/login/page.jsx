@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../../context/AuthContext';
-import { ShieldCheck, Lock, Mail } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowLeft } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 
 export default function AdminLogin() {
@@ -27,6 +27,14 @@ export default function AdminLogin() {
       {/* Background Glows */}
       <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
       <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(236,72,153,0.1) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+
+      <button 
+        onClick={() => navigate('/')}
+        className="btn btn-secondary"
+        style={{ position: 'absolute', top: '24px', left: '24px', zIndex: 10, padding: '8px 16px', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
+      >
+        <ArrowLeft size={18} /> Back to Home
+      </button>
 
       <div style={{ width: '100%', maxWidth: '420px', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem', animation: 'slideDown 0.8s ease-out' }}>

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Card } from '../../components/ui/Card';
-import { AlertTriangle, KeyRound, RefreshCcw, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, MonitorPlay, XCircle, Search, CheckCircle2, UserCheck } from 'lucide-react';
+import { useKioskContext } from '../../context/KioskContext';
 
 export default function ModDashboard() {
-  const [resetPin, setResetPin] = useState('');
-  const [resetStatus, setResetStatus] = useState(null);
+  const { activeStudent, kioskStatus, roster, enableVoting, cancelVoting } = useKioskContext();
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Mock Flagged Data
   const flaggedActivity = [
@@ -48,13 +49,26 @@ const dashboardStats = [
   },
 ];
   return (
-    <div>
-      <div className="page-header" style={{ marginBottom: '2rem' }}>
+    <div style={{ padding: '1rem' }}>
+      {/* Premium Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '2.5rem',
+        borderBottom: '1px solid var(--border-color)',
+        paddingBottom: '1.5rem'
+      }}>
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <ShieldAlert color="var(--accent-pink)" /> Security Operations
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.8rem', fontWeight: '600', letterSpacing: '-0.02em', margin: 0 }}>
+            <div style={{ padding: '8px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', display: 'flex' }}>
+              <ShieldCheck color="var(--accent)" size={24} />
+            </div>
+            Kiosk Control Desk
           </h1>
-          <p>Monitor election integrity and manage voter access.</p>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '1rem' }}>
+            Securely verify and enable students for the physical voting terminal.
+          </p>
         </div>
 
       </div>
