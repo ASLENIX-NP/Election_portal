@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import api from '@/services/api';
 
 export function useElection() {
   const [status, setStatus] = useState('loading'); // loading, active, closed

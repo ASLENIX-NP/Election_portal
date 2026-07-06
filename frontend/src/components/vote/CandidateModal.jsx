@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, UserCircle, MessageSquareQuote } from 'lucide-react';
-import { Card } from '../ui/Card';
+import { Card } from '../common/Card';
 
 export default function CandidateModal({ candidate, onClose }) {
   if (!candidate) return null;
