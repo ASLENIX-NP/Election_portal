@@ -1,9 +1,11 @@
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, UserSquare2, Settings, ShieldCheck, LogOut, ClipboardList } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
+import { useElection } from '../../context/ElectionContext';
 
 export default function AdminLayout() {
   const { user, logout } = useAuthContext();
+  const { electionTitle } = useElection();
   const navigate = useNavigate();
 
   // Protect Admin Routes
@@ -21,7 +23,7 @@ export default function AdminLayout() {
       <aside className="admin-sidebar">
         <div className="admin-brand">
           <ShieldCheck className="icon" size={28} />
-          <span>ElectionAdmin</span>
+          <span style={{ fontSize: '1rem', lineHeight: '1.2', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }} title={electionTitle}>{electionTitle || 'ElectionAdmin'}</span>
         </div>
         
         <nav className="admin-nav">
@@ -39,7 +41,11 @@ export default function AdminLayout() {
           </NavLink>
           <NavLink to="/admin/students" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Users size={20} />
-            Manage Students
+            Manage Voters
+          </NavLink>
+          <NavLink to="/admin/moderators" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <ShieldCheck size={20} />
+            Manage Moderators
           </NavLink>
           <NavLink to="/admin/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Settings size={20} />

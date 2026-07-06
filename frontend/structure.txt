@@ -1,0 +1,77 @@
+﻿|-- public
+    |-- favicon.svg
+    |-- icons.svg
+|-- src
+    |-- app
+        |-- admin
+            |-- ballot
+                |-- page.jsx
+            |-- candidates
+                |-- page.jsx
+            |-- login
+                |-- page.jsx
+            |-- moderators
+                |-- page.jsx
+            |-- settings
+                |-- page.jsx
+            |-- students
+                |-- page.jsx
+            |-- layout.jsx
+            |-- page.jsx
+        |-- mod
+            |-- layout.jsx
+            |-- page.jsx
+        |-- verify
+            |-- page.jsx
+        |-- vote
+            |-- ballot
+                |-- page.jsx
+            |-- receipt
+                |-- page.jsx
+            |-- layout.jsx
+            |-- page.jsx
+        |-- home.css
+        |-- page.jsx
+    |-- assets
+        |-- hero.png
+        |-- react.svg
+        |-- vite.svg
+    |-- components
+        |-- admin
+            |-- ChartWidget.jsx
+            |-- CsvUploader.jsx
+            |-- DemographicsWidget.jsx
+            |-- TrendChartWidget.jsx
+        |-- mod
+            |-- StudentRow.jsx
+        |-- ui
+            |-- Button.jsx
+            |-- Card.jsx
+        |-- vote
+            |-- CandidateCard.jsx
+            |-- CandidateModal.jsx
+    |-- context
+        |-- AuthContext.jsx
+        |-- BallotContext.jsx
+        |-- ElectionContext.jsx
+        |-- KioskContext.jsx
+        |-- ThemeContext.jsx
+    |-- hooks
+        |-- useAuth.js
+        |-- useElection.js
+    |-- services
+        |-- api.js
+    |-- utils
+        |-- ReportGenerator.js
+    |-- App.css
+    |-- App.jsx
+    |-- index.css
+    |-- main.jsx
+|-- .gitignore
+|-- .oxlintrc.json
+|-- index.html
+|-- package-lock.json
+|-- package.json
+|-- README.md
+|-- structure.txt
+|-- vite.config.js

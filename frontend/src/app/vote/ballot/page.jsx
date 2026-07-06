@@ -4,10 +4,12 @@ import { Card } from '../../../components/ui/Card';
 import CandidateModal from '../../../components/vote/CandidateModal';
 import { CheckCircle2, Info } from 'lucide-react';
 import { useBallotContext } from '../../../context/BallotContext';
+import { useKioskContext } from '../../../context/KioskContext';
 
 export default function BallotPage() {
   const navigate = useNavigate();
   const { setReceipt } = useBallotContext();
+  const { markVoted } = useKioskContext();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [votes, setVotes] = useState({});
 
@@ -52,6 +54,10 @@ export default function BallotPage() {
     // Generate Cryptographic Receipt Hash
     const randomHash = '#' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     setReceipt(randomHash);
+    
+    // Finalize the Kiosk Session
+    markVoted();
+    
     navigate('/vote/receipt');
   };
 

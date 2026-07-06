@@ -1,6 +1,6 @@
-export function Card({ children, className = '' }) {
+export function Card({ children, className = '', style = {} }) {
   return (
-    <div className={`glass-panel ${className}`} style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+    <div className={`glass-panel ${className}`} style={{ padding: '1.5rem', marginBottom: '1.5rem', ...style }}>
       {children}
     </div>
   );
