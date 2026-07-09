@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Card } from '@/components/common/Card';
-import { Plus, Edit2, Trash2, X, Image as ImageIcon, ShieldCheck, Shield } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Image as ImageIcon, ShieldCheck, Shield, Search, ChevronLeft, ChevronRight, CheckSquare, Square } from 'lucide-react';
 import { useElection } from '@/context/ElectionContext';
 
 export default function ManageModerators() {
@@ -12,6 +12,14 @@ export default function ManageModerators() {
   const [currentMod, setCurrentMod] = useState({ id: null, name: '', email: '', role: 'Station Monitor', photoUrl: '' });
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   
+  // Table State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('name');
+  const [sortDir, setSortDir] = useState('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMods, setSelectedMods] = useState(new Set());
+  const itemsPerPage = 10;
+
   const fileInputRef = useRef(null);
 
   const openAddModal = () => {
@@ -50,6 +58,74 @@ export default function ManageModerators() {
     }
   };
 
+  const handleBulkDelete = () => {
+    if(selectedMods.size === 0) return;
+    if(window.confirm(`Are you sure you want to remove ${selectedMods.size} moderators?`)) {
+      selectedMods.forEach(id => deleteModerator(id));
+      setSelectedMods(new Set());
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedMods.size === currentItems.length && currentItems.length > 0) {
+      setSelectedMods(new Set());
+    } else {
+      setSelectedMods(new Set(currentItems.map(m => m.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedMods(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    let result = moderators;
+    
+    // Search
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(m => 
+        (m.name && m.name.toLowerCase().includes(lower)) || 
+        (m.email && m.email.toLowerCase().includes(lower)) ||
+        (m.role && m.role.toLowerCase().includes(lower))
+      );
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      const valA = a[sortField] || '';
+      const valB = b[sortField] || '';
+      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [moderators, searchTerm, sortField, sortDir]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage);
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return null;
+    return <span style={{ fontSize: '0.7rem', marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="page-header authentic-header">
@@ -79,46 +155,113 @@ export default function ManageModerators() {
         </Card>
       </div>
 
-      <div className="candidate-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {moderators.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <ShieldCheck size={48} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
-            <p>No moderators found. Click "Add Moderator" to get started.</p>
+      <Card style={{ padding: 0, overflow: 'hidden' }}>
+        {/* Toolbar */}
+        <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color)' }}>
+          <div className="form-control" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '320px', background: 'var(--surface-hover)', borderRadius: '8px', padding: '10px 16px' }}>
+            <Search size={18} color="var(--text-secondary)" />
+            <input 
+              type="text" 
+              placeholder="Search by name, email, or role..." 
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '100%' }} 
+            />
           </div>
-        ) : moderators.map(m => (
-          <Card key={m.id} className="authentic-card hover-lift" style={{ padding: '0', display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-            
-            <div style={{ height: '100px', background: `linear-gradient(135deg, ${m.color || 'var(--accent-purple)'}40, transparent)`, position: 'relative' }}>
-              <div style={{ position: 'absolute', bottom: '-30px', left: '1.5rem', width: '70px', height: '70px', borderRadius: '50%', background: m.photoUrl ? 'transparent' : 'var(--bg-color)', border: '4px solid var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                {m.photoUrl ? (
-                  <img src={m.photoUrl} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontSize: '1.5rem', fontWeight: 700, color: m.color || 'var(--text-primary)' }}>{m.avatar || m.name.charAt(0)}</span>
-                )}
-              </div>
-            </div>
 
-            <div style={{ padding: '2.5rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <h4 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{m.name}</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>{m.email}</p>
-              
-              <div className="flex items-center gap-2 mb-4">
-                <ShieldCheck size={14} style={{ color: m.color || 'var(--accent-purple)' }} />
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{m.role}</span>
-              </div>
-              
-              <div className="flex-between mt-auto pt-4" style={{ borderTop: '1px solid var(--border-color)' }}>
-                <button className="btn btn-secondary text-sm flex items-center gap-2" style={{ background: 'transparent', border: '1px solid var(--border-color)', padding: '0.4rem 0.75rem' }} onClick={() => openEditModal(m)}>
-                  <Edit2 size={14} /> Edit
-                </button>
-                <button className="btn text-sm flex items-center gap-2" style={{ color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)', padding: '0.4rem 0.75rem' }} onClick={() => setConfirmDeleteId(m.id)}>
-                  <Trash2 size={14} /> Remove
-                </button>
-              </div>
+          {selectedMods.size > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                <strong>{selectedMods.size}</strong> selected
+              </span>
+              <button className="btn btn-danger" onClick={handleBulkDelete} style={{ padding: '8px 16px' }}>
+                <Trash2 size={16} /> Bulk Delete
+              </button>
             </div>
-          </Card>
-        ))}
-      </div>
+          )}
+        </div>
+
+        {/* Data Table */}
+        <div className="data-table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: '40px' }} onClick={toggleSelectAll}>
+                  {selectedMods.size === currentItems.length && currentItems.length > 0 ? <CheckSquare size={18} /> : <Square size={18} />}
+                </th>
+                <th>Profile</th>
+                <th onClick={() => handleSort('name')}>Name <SortIcon field="name" /></th>
+                <th onClick={() => handleSort('email')}>Email <SortIcon field="email" /></th>
+                <th onClick={() => handleSort('role')}>Role <SortIcon field="role" /></th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No moderators found matching your criteria.</td>
+                </tr>
+              ) : currentItems.map(m => (
+                <tr key={m.id} className={selectedMods.has(m.id) ? 'selected' : ''}>
+                  <td onClick={() => toggleSelect(m.id)} style={{ cursor: 'pointer' }}>
+                    {selectedMods.has(m.id) ? <CheckSquare size={18} color="var(--accent)" /> : <Square size={18} color="var(--text-muted)" />}
+                  </td>
+                  <td>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: m.photoUrl ? 'transparent' : 'var(--surface-hover)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {m.photoUrl ? (
+                        <img src={m.photoUrl} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: m.color || 'var(--text-primary)' }}>{m.avatar || m.name.charAt(0)}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{ fontWeight: 600 }}>{m.name}</td>
+                  <td>{m.email}</td>
+                  <td>
+                    <span className="badge" style={{ background: 'rgba(139, 92, 246, 0.1)', color: 'var(--accent-purple)' }}>{m.role}</span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <button className="btn" style={{ padding: '6px', background: 'transparent', color: 'var(--text-primary)' }} onClick={() => openEditModal(m)} title="Edit">
+                        <Edit2 size={16} />
+                      </button>
+                      <button className="btn" style={{ padding: '6px', background: 'transparent', color: 'var(--danger)' }} onClick={() => setConfirmDeleteId(m.id)} title="Remove">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Showing {filteredAndSorted.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSorted.length)} of {filteredAndSorted.length} staff
+          </span>
+          
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              className="btn btn-secondary" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              style={{ padding: '6px 12px' }}
+            >
+              <ChevronLeft size={16} /> Prev
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(p => p + 1)}
+              style={{ padding: '6px 12px' }}
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </Card>
 
       {isModalOpen && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

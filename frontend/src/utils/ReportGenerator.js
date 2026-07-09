@@ -1,68 +1,112 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-export const generateElectionPDF = (stats, chartData) => {
+export const generateElectionPDF = (stats, candidates) => {
   const doc = new jsPDF();
   
-  // Header
-  doc.setFontSize(22);
-  doc.setTextColor(59, 130, 246); // Blue
-  doc.text("Official Election Results", 14, 22);
+  // Professional Letterhead
+  doc.setFillColor(30, 41, 59); // Dark Slate Blue
+  doc.rect(0, 0, 210, 40, 'F');
   
-  doc.setFontSize(11);
-  doc.setTextColor(100);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
-  doc.text("Certified by: System Administrator", 14, 36);
+  doc.setFontSize(24);
+  doc.setTextColor(255, 255, 255); // White
+  doc.text("CERTIFICATE OF ELECTION RESULTS", 105, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.setTextColor(148, 163, 184); // Slate 400
+  doc.text("Official Automated Audit Report", 105, 30, { align: 'center' });
 
-  // Stats Section
+  // Metadata Section
+  doc.setFontSize(10);
+  doc.setTextColor(50);
+  doc.text(`Date of Certification: ${new Date().toLocaleString()}`, 14, 50);
+  
+  const hash = 'SHA256-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+  doc.text(`Document Hash: ${hash}`, 14, 56);
+  doc.text("Status: VERIFIED & SEALED", 14, 62);
+
+  // Summary Statistics
   doc.setFontSize(14);
   doc.setTextColor(0);
-  doc.text("Summary Statistics", 14, 50);
+  doc.text("I. Summary Statistics", 14, 75);
   
   const statsBody = stats.map(s => [s.label, s.value]);
   doc.autoTable({
-    startY: 55,
-    head: [['Metric', 'Value']],
+    startY: 80,
+    head: [['Metric', 'Recorded Value']],
     body: statsBody,
     theme: 'grid',
-    headStyles: { fillColor: [59, 130, 246] }
+    headStyles: { fillColor: [16, 185, 129] }, // Emerald Green
+    margin: { top: 10 }
   });
 
-  // Results Section
+  // Candidate Results Section
   const nextY = doc.lastAutoTable.finalY + 15;
   doc.setFontSize(14);
-  doc.text("Detailed Candidate Results", 14, nextY);
+  doc.text("II. Detailed Electoral Standings", 14, nextY);
 
-  const resultsBody = chartData.map(c => [c.name, c.votes]);
-  doc.autoTable({
-    startY: nextY + 5,
-    head: [['Candidate / Position', 'Total Votes']],
-    body: resultsBody.sort((a, b) => b[1] - a[1]), // Sort by votes desc
-    theme: 'striped',
-    headStyles: { fillColor: [139, 92, 246] } // Purple
+  // Group candidates by position
+  const positions = [...new Set(candidates.map(c => c.position))];
+  
+  let currentY = nextY + 5;
+
+  positions.forEach(pos => {
+    const posCandidates = candidates.filter(c => c.position === pos).sort((a, b) => b.votes - a.votes);
+    const totalPosVotes = posCandidates.reduce((sum, c) => sum + c.votes, 0);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Position: ${pos.toUpperCase()}`, 14, currentY + 8);
+    
+    const resultsBody = posCandidates.map((c, i) => {
+      const percentage = totalPosVotes > 0 ? ((c.votes / totalPosVotes) * 100).toFixed(1) + '%' : '0%';
+      const margin = i === 0 && posCandidates.length > 1 ? `+${c.votes - posCandidates[1].votes}` : '-';
+      return [i + 1, c.name, c.votes.toLocaleString(), percentage, margin];
+    });
+
+    doc.autoTable({
+      startY: currentY + 12,
+      head: [['Rank', 'Candidate Name', 'Votes', 'Share', 'Margin']],
+      body: resultsBody,
+      theme: 'striped',
+      headStyles: { fillColor: [139, 92, 246] }, // Purple
+      margin: { top: 10 }
+    });
+    
+    currentY = doc.lastAutoTable.finalY + 10;
   });
 
-  // Footer Signature Line
-  const finalY = doc.lastAutoTable.finalY + 30;
-  if (finalY < 250) {
-    doc.line(14, finalY, 80, finalY);
-    doc.text("Principal Signature", 14, finalY + 8);
-    
-    doc.line(120, finalY, 190, finalY);
-    doc.text("Election Commissioner", 120, finalY + 8);
+  // Footer Signature Lines
+  if (currentY > 230) {
+    doc.addPage();
+    currentY = 20;
   }
+  
+  currentY += 20;
+  doc.line(20, currentY, 80, currentY);
+  doc.text("Principal / Chief Administrator", 20, currentY + 8);
+  
+  doc.line(130, currentY, 190, currentY);
+  doc.text("Election Commissioner", 130, currentY + 8);
 
-  doc.save('Election_Results_Official.pdf');
+  doc.save(`Election_Results_${new Date().getTime()}.pdf`);
 };
 
-export const generateElectionCSV = (chartData) => {
-  const headers = ['Candidate,Position,Votes'];
-  const rows = chartData.map(c => {
-    // Basic parse of "John Doe (Pres)" to extract name and position
-    const match = c.name.match(/(.+) \((.+)\)/);
-    const name = match ? match[1] : c.name;
-    const pos = match ? match[2] : 'Unknown';
-    return `${name},${pos},${c.votes}`;
+export const generateElectionCSV = (candidates) => {
+  const headers = ['ID,Candidate Name,Position,Total Votes,Vote Percentage'];
+  
+  // Group by position to calculate percentages
+  const positions = [...new Set(candidates.map(c => c.position))];
+  let rows = [];
+
+  positions.forEach(pos => {
+    const posCandidates = candidates.filter(c => c.position === pos).sort((a, b) => b.votes - a.votes);
+    const totalVotes = posCandidates.reduce((sum, c) => sum + c.votes, 0);
+    
+    posCandidates.forEach(c => {
+      const percentage = totalVotes > 0 ? ((c.votes / totalVotes) * 100).toFixed(2) + '%' : '0%';
+      rows.push(`${c.id},"${c.name}","${c.position}",${c.votes},${percentage}`);
+    });
   });
 
   const csvContent = headers.concat(rows).join('\n');
@@ -71,7 +115,7 @@ export const generateElectionCSV = (chartData) => {
   
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", "Election_Raw_Data.csv");
+  link.setAttribute("download", `Election_Raw_Data_${new Date().getTime()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

@@ -1,39 +1,29 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/common/Card';
 import CandidateModal from '@/components/vote/CandidateModal';
-import { CheckCircle2, Info } from 'lucide-react';
+import { CheckCircle2, Info, Lock, X, AlertTriangle } from 'lucide-react';
 import { useBallotContext } from '@/context/BallotContext';
 import { useKioskContext } from '@/context/KioskContext';
+import { useElection } from '@/context/ElectionContext';
 
 export default function BallotPage() {
   const navigate = useNavigate();
+  const { boothId } = useParams();
   const { setReceipt } = useBallotContext();
   const { markVoted } = useKioskContext();
+  const { positions, candidates, castBallot } = useElection();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [votes, setVotes] = useState({});
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Mock Election Data
-  const ballotData = [
-    {
-      id: 'pos1',
-      title: 'President',
-      maxVotes: 1,
-      candidates: [
-        { id: 'c1', name: 'John Doe', position: 'President', slogan: 'A better tomorrow, today.', platform: ['More student parking', 'Healthier cafeteria options', 'Friday pep rallies'] },
-        { id: 'c2', name: 'Jane Smith', position: 'President', slogan: 'Action over words.', platform: ['Tech upgrades for library', 'Extend lunch by 10 mins', 'Weekly mental health days'] }
-      ]
-    },
-    {
-      id: 'pos2',
-      title: 'Vice President',
-      maxVotes: 1,
-      candidates: [
-        { id: 'c3', name: 'Alice Williams', position: 'Vice President', slogan: 'Voice of the students.', platform: ['Revamp student council', 'More extracurricular funding'] },
-        { id: 'c4', name: 'Bob M.', position: 'Vice President', slogan: 'Keep it simple.', platform: ['Better wifi', 'Open campus for seniors'] }
-      ]
-    }
-  ];
+  // Generate dynamic ballot data from ElectionContext
+  const ballotData = positions.map(pos => ({
+    id: pos.id,
+    title: pos.title,
+    maxVotes: pos.maxVotes,
+    candidates: candidates.filter(c => c.position === pos.title)
+  }));
 
   const handleToggleVote = (positionId, candidateId, maxVotes) => {
     setVotes(prev => {
@@ -49,89 +39,269 @@ export default function BallotPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handlePreSubmit = (e) => {
     e.preventDefault();
+    setShowConfirmModal(true);
+  };
+
+  const confirmAndSubmit = () => {
+    // Gather all selected candidate IDs across all positions
+    const selectedCandidateIds = Object.values(votes).flat();
+    
+    // Cast the vote securely into the global ledger (ElectionContext)
+    castBallot(selectedCandidateIds);
+
     // Generate Cryptographic Receipt Hash
     const randomHash = '#' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     setReceipt(randomHash);
     
-    // Finalize the Kiosk Session
-    markVoted();
-    
-    navigate('/vote/receipt');
+    // Finalize the Kiosk Session with booth context
+    markVoted(boothId);
+    setShowConfirmModal(false);
+    navigate(`/vote/${boothId}/receipt`);
   };
 
-  return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-      <div style={{ textAlign: 'center', marginBottom: '3rem', animation: 'slideDown 0.6s ease-out' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 700, marginBottom: '0.5rem', background: 'linear-gradient(135deg, #fff 0%, #6ee7b7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Official Ballot
-        </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Review the candidates and cast your vote carefully.</p>
-      </div>
+  const totalPositions = ballotData.length;
+  const completedPositions = ballotData.filter(pos => (votes[pos.id] || []).length === pos.maxVotes).length;
+  const progressPercent = totalPositions === 0 ? 0 : (completedPositions / totalPositions) * 100;
+  const isComplete = completedPositions === totalPositions && totalPositions > 0;
 
-      <form onSubmit={handleSubmit}>
-        {ballotData.map((position) => (
-          <div key={position.id} style={{ marginBottom: '3rem', animation: 'fadeUp 0.6s ease-out backwards' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>{position.title}</h2>
-              <span className="badge active">Select up to {position.maxVotes}</span>
+  return (
+    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingTop: '2rem', paddingBottom: '8rem' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 1.5rem', position: 'relative' }}>
+        
+        {/* Progress Tracker */}
+        <div style={{ position: 'sticky', top: '1rem', zIndex: 50, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', padding: '1rem 1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', marginBottom: '3rem', display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Voting Progress</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: isComplete ? '#10b981' : '#3b82f6' }}>{completedPositions} of {totalPositions} Categories</span>
             </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {position.candidates.map(candidate => {
-                const isSelected = (votes[position.id] || []).includes(candidate.id);
-                return (
-                  <Card 
-                    key={candidate.id} 
-                    style={{ 
-                      cursor: 'pointer', 
-                      position: 'relative',
-                      border: isSelected ? '2px solid var(--success)' : '1px solid var(--border-color)',
-                      background: isSelected ? 'rgba(16,185,129,0.05)' : 'var(--surface-color)',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onClick={() => handleToggleVote(position.id, candidate.id, position.maxVotes)}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '4px' }}>{candidate.name}</h3>
-                        <button 
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setSelectedCandidate(candidate); }}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}
-                        >
-                          <Info size={16} /> View Profile
-                        </button>
-                      </div>
-                      <div style={{ 
-                        width: '32px', height: '32px', borderRadius: '50%', border: isSelected ? 'none' : '2px solid var(--border-color)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981'
-                      }}>
-                        {isSelected && <CheckCircle2 size={32} style={{ filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.5))' }} />}
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+            <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: isComplete ? '#10b981' : '#3b82f6', width: `${progressPercent}%`, transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
             </div>
           </div>
-        ))}
-        
-        <div style={{ position: 'sticky', bottom: '2rem', zIndex: 10 }}>
-          <Card style={{ padding: '1.5rem', background: 'rgba(6,9,19,0.9)', backdropFilter: 'blur(20px)', border: '1px solid var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-            <div>
-              <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Ready to submit?</h3>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>You cannot change your vote after submission.</p>
+          {isComplete && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 600, fontSize: '0.9rem', animation: 'fadeUp 0.3s ease-out' }}>
+              <CheckCircle2 size={20} /> Complete
             </div>
-            <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '1.1rem' }}>
-              Cast Ballot securely
-            </button>
-          </Card>
+          )}
         </div>
-      </form>
 
-      <CandidateModal candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
+        <div style={{ textAlign: 'center', marginBottom: '4rem', animation: 'slideDown 0.6s ease-out' }}>
+          <h1 style={{ fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', marginBottom: '1rem' }}>
+            Official Ballot
+          </h1>
+          <p style={{ color: '#475569', fontSize: '1.15rem', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+            Please select your preferred candidates for each position below. Your selections are securely encrypted and strictly anonymous.
+          </p>
+        </div>
+
+        <form onSubmit={handlePreSubmit} style={{ position: 'relative', zIndex: 1 }}>
+          {ballotData.map((position) => {
+            const selectedCount = (votes[position.id] || []).length;
+            const isSatisfied = selectedCount === position.maxVotes;
+
+            return (
+              <div key={position.id} style={{ marginBottom: '5rem', animation: 'fadeUp 0.6s ease-out backwards' }}>
+                <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                  <h2 style={{ fontSize: '2.rem', fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>{position.title}</h2>
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '1rem', fontWeight: 500 }}>Select {position.maxVotes > 1 ? `up to ${position.maxVotes}` : '1'} candidate{position.maxVotes > 1 ? 's' : ''}</p>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+                  {position.candidates.map(candidate => {
+                    const isSelected = (votes[position.id] || []).includes(candidate.id);
+                    const isMaxed = selectedCount >= position.maxVotes && !isSelected;
+                    
+                    return (
+                      <div 
+                        key={candidate.id} 
+                        style={{ 
+                          cursor: isMaxed ? 'not-allowed' : 'pointer', 
+                          position: 'relative',
+                          padding: '2rem 1.5rem',
+                          borderRadius: '24px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          border: isSelected ? '2px solid #10b981' : '1px solid #e2e8f0',
+                          background: isSelected ? '#f0fdf4' : '#ffffff',
+                          boxShadow: isSelected ? '0 10px 25px -5px rgba(16, 185, 129, 0.15)' : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                          opacity: isMaxed ? 0.6 : 1,
+                          transform: isSelected ? 'translateY(-4px)' : 'translateY(0)',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                        onMouseOver={(e) => { 
+                          if(!isMaxed && !isSelected) { 
+                            e.currentTarget.style.transform = 'translateY(-4px)'; 
+                            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'; 
+                          } 
+                        }}
+                        onMouseOut={(e) => { 
+                          if(!isMaxed && !isSelected) { 
+                            e.currentTarget.style.transform = 'translateY(0)'; 
+                            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'; 
+                          } 
+                        }}
+                        onClick={() => !isMaxed && handleToggleVote(position.id, candidate.id, position.maxVotes)}
+                      >
+                        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setSelectedCandidate(candidate); }}
+                            style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.2s' }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = '#e2e8f0'; e.currentTarget.style.color = '#334155'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }}
+                            title="View Profile"
+                          >
+                            <Info size={16} />
+                          </button>
+                        </div>
+
+                        <img 
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random&color=fff&size=120`} 
+                          alt={candidate.name}
+                          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: isSelected ? '4px solid #10b981' : '1px solid #e2e8f0', marginBottom: '1.25rem', transition: 'all 0.2s ease', boxShadow: isSelected ? '0 0 0 4px rgba(16, 185, 129, 0.2)' : 'none' }}
+                        />
+                        <h3 style={{ fontSize: '1.35rem', fontWeight: 700, margin: '0 0 4px 0', color: '#0f172a' }}>{candidate.name}</h3>
+                        <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>{position.title} Candidate</p>
+                        
+                        <div style={{ marginTop: 'auto', width: '100%' }}>
+                          <div style={{ 
+                            width: '100%', padding: '10px 0', borderRadius: '12px',
+                            background: isSelected ? '#10b981' : '#f8fafc',
+                            border: isSelected ? 'none' : '1px solid #e2e8f0',
+                            color: isSelected ? '#ffffff' : '#475569',
+                            fontWeight: 700, fontSize: '0.95rem',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                            transition: 'all 0.2s ease'
+                          }}>
+                            {isSelected ? <><CheckCircle2 size={18} /> Selected</> : 'Select'}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Floating Pill Action Footer */}
+          <div style={{ 
+            position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 100,
+            animation: 'slideUp 0.6s ease-out 0.5s backwards'
+          }}>
+            <div style={{ 
+              padding: '8px 8px 8px 24px', 
+              background: '#ffffff', 
+              border: '1px solid #e2e8f0',
+              borderRadius: '999px',
+              display: 'flex', alignItems: 'center', gap: '24px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ color: isComplete ? '#10b981' : '#64748b', display: 'flex', alignItems: 'center' }}>
+                  <Lock size={20} />
+                </div>
+                <div>
+                  <span style={{ fontWeight: 700, color: '#0f172a', display: 'block', fontSize: '1rem', lineHeight: 1.2 }}>
+                    {isComplete ? 'Ready to Submit' : 'Incomplete Ballot'}
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                    {isComplete ? 'All categories filled' : `${totalPositions - completedPositions} categor${totalPositions - completedPositions === 1 ? 'y' : 'ies'} remaining`}
+                  </span>
+                </div>
+              </div>
+              <button 
+                type="submit" 
+                style={{ 
+                  padding: '12px 28px', fontSize: '1rem', fontWeight: 700, borderRadius: '999px',
+                  background: isComplete ? '#10b981' : '#e2e8f0',
+                  color: isComplete ? '#ffffff' : '#94a3b8',
+                  border: 'none',
+                  boxShadow: isComplete ? '0 4px 14px 0 rgba(16, 185, 129, 0.39)' : 'none',
+                  transition: 'all 0.2s ease',
+                  cursor: isComplete ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', gap: '8px'
+                }}
+                disabled={!isComplete}
+              >
+                Cast Ballot {isComplete && <CheckCircle2 size={18} />}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <CandidateModal candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
+
+        {/* Crisp Review Modal */}
+        {showConfirmModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
+            <div style={{ background: '#ffffff', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: '700px', padding: '2.5rem', boxShadow: '0 -10px 40px rgba(0,0,0,0.1)', animation: 'slideUp 0.3s ease-out', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>Review Your Ballot</h2>
+                  <p style={{ color: '#64748b', margin: 0 }}>Please verify your selections before casting.</p>
+                </div>
+                <button type="button" onClick={() => setShowConfirmModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = '#e2e8f0'; }} onMouseOut={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div style={{ overflowY: 'auto', paddingRight: '8px', marginBottom: '2.5rem', flex: 1 }}>
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                  {ballotData.map(pos => (
+                    <div key={pos.id} style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ margin: 0, color: '#475569', fontSize: '1rem', fontWeight: 600 }}>{pos.title}</h4>
+                      {votes[pos.id]?.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                          {votes[pos.id].map(candId => {
+                            const cand = pos.candidates.find(c => c.id === candId);
+                            return cand ? (
+                              <div key={candId} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#ffffff', padding: '6px 12px', borderRadius: '999px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                <CheckCircle2 size={16} color="#10b981" />
+                                <span style={{ color: '#0f172a', fontWeight: 700, fontSize: '0.9rem' }}>{cand.name}</span>
+                              </div>
+                            ) : null;
+                          })}
+                        </div>
+                      ) : (
+                         <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', background: '#fef2f2', padding: '6px 12px', borderRadius: '999px', border: '1px solid #fecaca' }}>Omitted</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowConfirmModal(false)}
+                  style={{ flex: 1, padding: '16px', background: '#ffffff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '16px', fontWeight: 700, fontSize: '1.05rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                >
+                  Go Back
+                </button>
+                <button 
+                  type="button" 
+                  onClick={confirmAndSubmit}
+                  style={{ flex: 2, padding: '16px', background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '16px', fontWeight: 700, fontSize: '1.05rem', cursor: 'pointer', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.39)', transition: 'all 0.2s', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <Lock size={18} /> Confirm & Cast Ballot
+                </button>
+              </div>
+              
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

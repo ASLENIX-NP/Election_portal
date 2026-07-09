@@ -30,26 +30,37 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+    <div className="animate-fade-in" style={{ paddingBottom: '3rem', position: 'relative' }}>
+      
+      {/* Background glow for premium feel */}
+      <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(6,182,212,0.12) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+      <div style={{ position: 'absolute', top: '40%', right: '-10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(236,72,153,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
       
       {/* Premium Header */}
-      <div className="page-header authentic-header" style={{ alignItems: 'flex-start' }}>
+      <div className="page-header" style={{ alignItems: 'flex-start', marginBottom: '3rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1.5rem' }}>
         <div>
-          <div className="header-title-row">
-            <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em' }}>{electionTitle || 'Election Control Center'}</h1>
+          <div className="header-title-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+            <div style={{ padding: '12px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '16px', display: 'flex', boxShadow: '0 8px 25px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <ShieldCheck size={28} color="var(--accent-cyan)" style={{ filter: 'drop-shadow(0 0 8px rgba(6,182,212,0.5))' }} />
+            </div>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #ffffff 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
+              {electionTitle || 'Election Control Center'}
+            </h1>
             {status === 'Active' ? (
-              <span className="status-badge pulse-badge" style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>
+              <span className="status-badge pulse-badge" style={{ padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, marginLeft: '8px', boxShadow: '0 0 20px rgba(16,185,129,0.2)' }}>
                 <span className="pulse-dot"></span>
                 LIVE SYSTEM
               </span>
             ) : (
-              <span className="status-badge" style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <span className="status-badge" style={{ padding: '0.5rem 1rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)', marginLeft: '8px' }}>
                 {status.toUpperCase()}
               </span>
             )}
           </div>
-          <p className="header-subtitle" style={{ fontSize: '1rem', marginTop: '0.5rem' }}>
-            <ShieldCheck size={18} color="var(--success)" style={{ verticalAlign: 'middle', marginRight: '4px', display: 'inline-block' }} /> 
+          <p className="header-subtitle" style={{ fontSize: '1.05rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+            <ShieldCheck size={18} color="var(--success)" style={{ verticalAlign: 'middle', marginRight: '6px', display: 'inline-block' }} /> 
             End-to-end encrypted voting process • {academicYear}
           </p>
         </div>
@@ -92,29 +103,44 @@ export default function AdminDashboard() {
       </div>
 
       {/* Top Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {stats.map((stat, i) => (
-          <Card key={i} className="authentic-card hover-lift" style={{ padding: '1.5rem', background: 'linear-gradient(145deg, var(--surface-color), var(--surface-hover))', border: '1px solid var(--border-color)', borderRadius: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{stat.label}</h3>
-              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <stat.icon size={20} />
+          <div 
+            key={i} 
+            className="glass-panel" 
+            style={{ 
+              padding: '1.75rem', 
+              background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))', 
+              border: '1px solid rgba(255,255,255,0.08)', 
+              borderRadius: '20px',
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              overflow: 'hidden',
+              animation: `fadeUp 0.5s ease-out ${i * 0.1}s backwards`
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 12px 30px ${stat.color}20`; e.currentTarget.style.borderColor = `${stat.color}50`; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</h3>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 15px ${stat.color}20` }}>
+                <stat.icon size={24} />
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.03em' }}>{stat.value}</div>
+              <div style={{ fontSize: '2.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.04em' }}>{stat.value}</div>
               {stat.trend && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success)', fontSize: '0.85rem', fontWeight: 700, paddingBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--success)', fontSize: '0.9rem', fontWeight: 700, paddingBottom: '8px', background: 'rgba(16,185,129,0.1)', padding: '4px 8px', borderRadius: '20px' }}>
                   <TrendingUp size={14} strokeWidth={3} /> {stat.trend}
                 </div>
               )}
             </div>
             {i === 2 && (
-               <div style={{ height: '6px', background: 'var(--border-color)', borderRadius: '3px', marginTop: '1.5rem', overflow: 'hidden' }}>
-                 <div style={{ height: '100%', width: `${turnout}%`, background: stat.color, borderRadius: '3px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+               <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginTop: '1.5rem', overflow: 'hidden' }}>
+                 <div style={{ height: '100%', width: `${turnout}%`, background: `linear-gradient(90deg, ${stat.color}, #f472b6)`, borderRadius: '4px', transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: `0 0 10px ${stat.color}80` }}></div>
                </div>
             )}
-          </Card>
+          </div>
         ))}
       </div>
 
@@ -122,14 +148,14 @@ export default function AdminDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1.5rem', alignItems: 'start' }}>
         
         {/* Left Col: Leaderboard */}
-        <Card className="authentic-card" style={{ padding: '0', overflow: 'hidden', borderRadius: '16px' }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)' }}>
+        <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ padding: '1.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)' }}>
             <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Live Leaderboard</h2>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Real-time candidate standings</p>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.25rem', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Live Leaderboard</h2>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Real-time candidate standings</p>
             </div>
             <select 
-              style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-color)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', outline: 'none' }}
+              style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', outline: 'none', transition: 'all 0.2s ease', backdropFilter: 'blur(10px)' }}
               value={selectedPosition}
               onChange={(e) => setSelectedPosition(e.target.value)}
             >
@@ -148,104 +174,113 @@ export default function AdminDashboard() {
 
               return (
                 <div key={candidate.id} style={{ 
-                  display: 'flex', alignItems: 'center', padding: '1rem', gap: '1rem', borderRadius: '12px',
-                  background: isLeading ? 'linear-gradient(to right, rgba(245, 158, 11, 0.05), transparent)' : 'transparent',
-                  border: isLeading ? '1px solid rgba(245, 158, 11, 0.2)' : '1px solid transparent',
-                  marginBottom: '0.5rem', transition: 'all 0.2s ease'
-                }}>
+                  display: 'flex', alignItems: 'center', padding: '1.25rem', gap: '1.25rem', borderRadius: '16px',
+                  background: isLeading ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(255,255,255,0.02) 100%)' : 'rgba(255,255,255,0.02)',
+                  border: isLeading ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(255,255,255,0.03)',
+                  marginBottom: '0.75rem', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative', overflow: 'hidden'
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.transform = 'translateX(6px)'; e.currentTarget.style.background = isLeading ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(255,255,255,0.04) 100%)' : 'rgba(255,255,255,0.05)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.background = isLeading ? 'linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(255,255,255,0.02) 100%)' : 'rgba(255,255,255,0.02)'; }}
+                >
+                  {isLeading && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'var(--warning)', boxShadow: '0 0 10px var(--warning)' }}></div>}
+                  
                   {/* Rank / Avatar */}
                   <div style={{ position: 'relative' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: `${candidate.color}20`, color: candidate.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1.2rem', border: `2px solid ${candidate.color}40` }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: `${candidate.color}20`, color: candidate.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.4rem', border: `2px solid ${candidate.color}50`, boxShadow: `0 0 15px ${candidate.color}30` }}>
                       {candidate.avatar}
                     </div>
                     {isLeading && (
-                      <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#f59e0b', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(245,158,11,0.4)' }}>
-                        <Award size={12} />
+                      <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(245,158,11,0.5)', border: '2px solid var(--surface-color)' }}>
+                        <Award size={14} />
                       </div>
                     )}
                   </div>
                   
                   {/* Info */}
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                    <h4 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.35rem', letterSpacing: '-0.01em' }}>
                       {candidate.name}
                     </h4>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, padding: '2px 8px', borderRadius: '10px', background: 'var(--surface-hover)', display: 'inline-block' }}>{candidate.position}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, padding: '4px 10px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.05)', display: 'inline-block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{candidate.position}</span>
                   </div>
                   
                   {/* Stats & Bar */}
-                  <div style={{ width: '140px', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>{candidate.votes.toLocaleString()}</span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>({percentage}%)</span>
+                  <div style={{ width: '160px', textAlign: 'right' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{candidate.votes.toLocaleString()}</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>({percentage}%)</span>
                     </div>
-                    <div style={{ height: '4px', background: 'var(--surface-hover)', borderRadius: '2px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${percentage}%`, background: candidate.color, borderRadius: '2px', transition: 'width 1s ease' }}></div>
+                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${percentage}%`, background: `linear-gradient(90deg, ${candidate.color}, ${candidate.color}dd)`, borderRadius: '3px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: `0 0 10px ${candidate.color}80` }}></div>
                     </div>
                   </div>
                 </div>
               );
             })}
             {filteredData.length === 0 && (
-              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                No candidates found for this position.
+              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <Activity size={40} style={{ opacity: 0.3, marginBottom: '1rem', margin: '0 auto' }} />
+                <p style={{ fontSize: '1.05rem' }}>No candidates found for this position.</p>
               </div>
             )}
           </div>
-        </Card>
+        </div>
 
         {/* Right Col: Demographics & Security Feed */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          <Card className="authentic-card" style={{ padding: '0', overflow: 'hidden', borderRadius: '16px' }}>
-            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color)' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.25rem' }}>Demographic Turnout</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Votes by Grade Level</p>
+          <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Demographic Turnout</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Live votes by grade level</p>
             </div>
             <div style={{ padding: '1.5rem' }}>
               <DemographicsWidget data={demoData} />
             </div>
-          </Card>
+          </div>
 
-          <Card className="authentic-card" style={{ padding: '0', overflow: 'hidden', borderRadius: '16px' }}>
-             <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <ShieldAlert size={18} style={{ color: 'var(--accent-cyan)' }} />
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Security Timeline</h3>
+          <div className="glass-panel" style={{ padding: '0', overflow: 'hidden', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
+             <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <ShieldAlert size={22} style={{ color: 'var(--accent-cyan)' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>Security Timeline</h3>
              </div>
              
-             <div style={{ padding: '1.5rem', maxHeight: '350px', overflowY: 'auto' }}>
-               <div style={{ position: 'relative' }}>
+             <div style={{ padding: '1.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+               <div style={{ position: 'relative', paddingLeft: '1rem' }}>
                  {/* Timeline Line */}
-                 <div style={{ position: 'absolute', left: '11px', top: '10px', bottom: '10px', width: '2px', background: 'var(--border-color)' }}></div>
+                 <div style={{ position: 'absolute', left: '26px', top: '10px', bottom: '10px', width: '2px', background: 'rgba(255,255,255,0.08)' }}></div>
                  
                  {recentActivity.map((activity, idx) => (
-                   <div key={activity.id} style={{ display: 'flex', gap: '1rem', marginBottom: idx === recentActivity.length - 1 ? '0' : '1.5rem', position: 'relative', zIndex: 1 }}>
+                   <div key={activity.id} style={{ display: 'flex', gap: '1.25rem', marginBottom: idx === recentActivity.length - 1 ? '0' : '1.75rem', position: 'relative', zIndex: 1, animation: `fadeIn 0.5s ease-out ${idx * 0.1}s backwards` }}>
                      
-                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--bg-color)', border: `2px solid ${activity.type === 'alert' ? 'var(--danger)' : activity.type === 'vote' ? 'var(--success)' : 'var(--accent-cyan)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                       {activity.type === 'vote' ? <CheckCircle2 size={12} color="var(--success)" /> : 
-                        activity.type === 'alert' ? <AlertTriangle size={12} color="var(--danger)" /> :
-                        <ShieldCheck size={12} color="var(--accent-cyan)" />}
+                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(15,23,42,0.8)', border: `2px solid ${activity.type === 'alert' ? 'var(--danger)' : activity.type === 'vote' ? 'var(--success)' : 'var(--accent-cyan)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 10px ${activity.type === 'alert' ? 'rgba(239,68,68,0.3)' : activity.type === 'vote' ? 'rgba(16,185,129,0.3)' : 'rgba(6,182,212,0.3)'}` }}>
+                       {activity.type === 'vote' ? <CheckCircle2 size={16} color="var(--success)" /> : 
+                        activity.type === 'alert' ? <AlertTriangle size={16} color="var(--danger)" /> :
+                        <ShieldCheck size={16} color="var(--accent-cyan)" />}
                      </div>
                      
-                     <div style={{ flex: 1 }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.25rem' }}>
-                          <p style={{ fontSize: '0.9rem', fontWeight: 600, color: activity.type === 'alert' ? 'var(--danger)' : 'var(--text-primary)', margin: 0 }}>{activity.message}</p>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{activity.time}</span>
+                     <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                          <p style={{ fontSize: '0.95rem', fontWeight: 600, color: activity.type === 'alert' ? 'var(--danger)' : 'var(--text-primary)', margin: 0, lineHeight: 1.4 }}>{activity.message}</p>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: '12px' }}>{activity.time}</span>
                        </div>
-                       <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'monospace', opacity: 0.6, background: 'var(--surface-hover)', padding: '2px 6px', borderRadius: '4px' }}>[{activity.hash}]</span>
+                       <span style={{ fontSize: '0.8rem', color: 'var(--accent-cyan)', fontFamily: 'monospace', opacity: 0.8, background: 'rgba(6,182,212,0.1)', padding: '4px 8px', borderRadius: '6px', border: '1px solid rgba(6,182,212,0.2)' }}>{activity.hash}</span>
                      </div>
                    </div>
                  ))}
                </div>
              </div>
-             <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color)', background: 'var(--surface-hover)' }}>
-               <button className="btn btn-secondary text-sm w-full" style={{ justifyContent: 'center', background: 'transparent', border: '1px solid var(--border-color)' }}>
-                  View Full Audit Ledger <ChevronRight size={14} />
+             <div style={{ padding: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)' }}>
+               <button className="btn btn-secondary text-sm w-full" style={{ justifyContent: 'center', background: 'transparent', border: '1px dashed rgba(255,255,255,0.15)', color: 'var(--text-secondary)', padding: '0.75rem', borderRadius: '12px', transition: 'all 0.3s ease' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
+                  View Full Audit Ledger <ChevronRight size={16} />
                </button>
              </div>
-          </Card>
+          </div>
 
         </div>
+      </div>
+      
       </div>
     </div>
   );

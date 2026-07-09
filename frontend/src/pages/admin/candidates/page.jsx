@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Card } from '@/components/common/Card';
-import { Plus, Edit2, Trash2, X, Image as ImageIcon, Award, Users } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Image as ImageIcon, Award, Users, Search, ChevronLeft, ChevronRight, CheckSquare, Square } from 'lucide-react';
 import { useElection } from '@/context/ElectionContext';
 
 export default function ManageCandidates() {
@@ -11,6 +11,14 @@ export default function ManageCandidates() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentCandidate, setCurrentCandidate] = useState({ id: null, name: '', position: '', grade: '10th', photoUrl: '' });
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  
+  // Table State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('name');
+  const [sortDir, setSortDir] = useState('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCandidates, setSelectedCandidates] = useState(new Set());
+  const itemsPerPage = 10;
   
   const fileInputRef = useRef(null);
 
@@ -50,6 +58,74 @@ export default function ManageCandidates() {
     }
   };
 
+  const handleBulkDelete = () => {
+    if(selectedCandidates.size === 0) return;
+    if(window.confirm(`Are you sure you want to remove ${selectedCandidates.size} candidates?`)) {
+      selectedCandidates.forEach(id => deleteCandidate(id));
+      setSelectedCandidates(new Set());
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedCandidates.size === currentItems.length && currentItems.length > 0) {
+      setSelectedCandidates(new Set());
+    } else {
+      setSelectedCandidates(new Set(currentItems.map(c => c.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedCandidates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    let result = candidates;
+    
+    // Search
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(c => 
+        (c.name && c.name.toLowerCase().includes(lower)) || 
+        (c.position && c.position.toLowerCase().includes(lower)) ||
+        (c.grade && c.grade.toLowerCase().includes(lower))
+      );
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      const valA = a[sortField] || '';
+      const valB = b[sortField] || '';
+      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [candidates, searchTerm, sortField, sortDir]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage);
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return null;
+    return <span style={{ fontSize: '0.7rem', marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="page-header authentic-header">
@@ -79,46 +155,113 @@ export default function ManageCandidates() {
         </Card>
       </div>
 
-      <div className="candidate-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {candidates.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <Users size={48} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
-            <p>No candidates found. Click "Add Candidate" to get started.</p>
+      <Card style={{ padding: 0, overflow: 'hidden' }}>
+        {/* Toolbar */}
+        <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color)' }}>
+          <div className="form-control" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '320px', background: 'var(--surface-hover)', borderRadius: '8px', padding: '10px 16px' }}>
+            <Search size={18} color="var(--text-secondary)" />
+            <input 
+              type="text" 
+              placeholder="Search by name, position, or grade..." 
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '100%' }} 
+            />
           </div>
-        ) : candidates.map(c => (
-          <Card key={c.id} className="authentic-card hover-lift" style={{ padding: '0', display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-            
-            <div style={{ height: '100px', background: `linear-gradient(135deg, ${c.color || 'var(--accent)'}40, transparent)`, position: 'relative' }}>
-              <div style={{ position: 'absolute', bottom: '-30px', left: '1.5rem', width: '70px', height: '70px', borderRadius: '50%', background: c.photoUrl ? 'transparent' : 'var(--bg-color)', border: '4px solid var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-                {c.photoUrl ? (
-                  <img src={c.photoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontSize: '1.5rem', fontWeight: 700, color: c.color || 'var(--text-primary)' }}>{c.avatar || c.name.charAt(0)}</span>
-                )}
-              </div>
-            </div>
 
-            <div style={{ padding: '2.5rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <h4 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{c.name}</h4>
-              <div className="flex items-center gap-2 mb-4">
-                <Award size={14} style={{ color: c.color || 'var(--accent)' }} />
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{c.position}</span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', opacity: 0.5 }}>•</span>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Grade {c.grade || 'N/A'}</span>
-              </div>
-              
-              <div className="flex-between mt-auto pt-4" style={{ borderTop: '1px solid var(--border-color)' }}>
-                <button className="btn btn-secondary text-sm flex items-center gap-2" style={{ background: 'transparent', border: '1px solid var(--border-color)', padding: '0.4rem 0.75rem' }} onClick={() => openEditModal(c)}>
-                  <Edit2 size={14} /> Edit
-                </button>
-                <button className="btn text-sm flex items-center gap-2" style={{ color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)', padding: '0.4rem 0.75rem' }} onClick={() => setConfirmDeleteId(c.id)}>
-                  <Trash2 size={14} /> Remove
-                </button>
-              </div>
+          {selectedCandidates.size > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                <strong>{selectedCandidates.size}</strong> selected
+              </span>
+              <button className="btn btn-danger" onClick={handleBulkDelete} style={{ padding: '8px 16px' }}>
+                <Trash2 size={16} /> Bulk Delete
+              </button>
             </div>
-          </Card>
-        ))}
-      </div>
+          )}
+        </div>
+
+        {/* Data Table */}
+        <div className="data-table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: '40px' }} onClick={toggleSelectAll}>
+                  {selectedCandidates.size === currentItems.length && currentItems.length > 0 ? <CheckSquare size={18} /> : <Square size={18} />}
+                </th>
+                <th>Profile</th>
+                <th onClick={() => handleSort('name')}>Name <SortIcon field="name" /></th>
+                <th onClick={() => handleSort('position')}>Position <SortIcon field="position" /></th>
+                <th onClick={() => handleSort('grade')}>Grade <SortIcon field="grade" /></th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No candidates found matching your criteria.</td>
+                </tr>
+              ) : currentItems.map(c => (
+                <tr key={c.id} className={selectedCandidates.has(c.id) ? 'selected' : ''}>
+                  <td onClick={() => toggleSelect(c.id)} style={{ cursor: 'pointer' }}>
+                    {selectedCandidates.has(c.id) ? <CheckSquare size={18} color="var(--accent)" /> : <Square size={18} color="var(--text-muted)" />}
+                  </td>
+                  <td>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: c.photoUrl ? 'transparent' : 'var(--surface-hover)', border: `1px solid ${c.color || 'var(--border-color)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {c.photoUrl ? (
+                        <img src={c.photoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: c.color || 'var(--text-primary)' }}>{c.avatar || c.name.charAt(0)}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{ fontWeight: 600 }}>{c.name}</td>
+                  <td>
+                    <span className="badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent)' }}>{c.position}</span>
+                  </td>
+                  <td>{c.grade}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <button className="btn" style={{ padding: '6px', background: 'transparent', color: 'var(--text-primary)' }} onClick={() => openEditModal(c)} title="Edit">
+                        <Edit2 size={16} />
+                      </button>
+                      <button className="btn" style={{ padding: '6px', background: 'transparent', color: 'var(--danger)' }} onClick={() => setConfirmDeleteId(c.id)} title="Remove">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Showing {filteredAndSorted.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSorted.length)} of {filteredAndSorted.length} candidates
+          </span>
+          
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              className="btn btn-secondary" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              style={{ padding: '6px 12px' }}
+            >
+              <ChevronLeft size={16} /> Prev
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(p => p + 1)}
+              style={{ padding: '6px 12px' }}
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </Card>
 
       {isModalOpen && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

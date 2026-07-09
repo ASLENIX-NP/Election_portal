@@ -1,206 +1,146 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '@/components/common/Card';
-import {
-  ShieldCheck,
-  MonitorPlay,
-  XCircle,
-  Search,
-  CheckCircle2,
-  UserCheck,
-  Key,
-  Lock,
-  ArrowRight,
-  AlertTriangle
-} from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Key, Activity, Users, LayoutDashboard, Flag } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
 
 export default function ModDashboard() {
-  const { activeStudent, kioskStatus, roster, enableVoting, cancelVoting } = useKioskContext();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { kioskStatus, activeStudent, isLockdown, toggleLockdown } = useKioskContext();
 
   // Mock Flagged Data
-  const flaggedActivity = [
-    { id: 1, studentId: 'S-10492', issue: 'Multiple failed PIN attempts (5x)', time: '2 mins ago', severity: 'high' },
-    { id: 2, studentId: 'S-22819', issue: 'Concurrent login from different IPs', time: '14 mins ago', severity: 'critical' },
-    { id: 3, studentId: 'S-88412', issue: 'Invalid session token', time: '1 hr ago', severity: 'low' }
+  const flaggedActivity = [];
+
+  const dashboardStats = [
+    { title: "Verified Today", value: "1,248", color: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", icon: <Users size={28} color="#fff" /> },
+    { title: "Active Kiosks", value: "42", color: "linear-gradient(135deg, #10b981 0%, #059669 100%)", icon: <Activity size={28} color="#fff" /> },
+    { title: "Open Alerts", value: "3", color: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", icon: <AlertTriangle size={28} color="#fff" /> },
+    { title: "Support Flags", value: "5", color: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", icon: <Flag size={28} color="#fff" /> },
   ];
 
-  const handleReset = (e) => {
-    e.preventDefault();
-    if (resetPin.trim()) {
-      setResetStatus('success');
-      setTimeout(() => setResetStatus(null), 3000);
-      setResetPin('');
-    }
-  };
-const dashboardStats = [
-  {
-    title: "Verified Today",
-    value: 1248,
-    color: "#2563EB",
-    icon: "👤",
-  },
-  {
-    title: "Currently Voting",
-    value: 42,
-    color: "#16A34A",
-    icon: "🗳",
-  },
-  {
-    title: "Open Alerts",
-    value: 3,
-    color: "#DC2626",
-    icon: "🚨",
-  },
-  {
-    title: "Support Requests",
-    value: 5,
-    color: "#F59E0B",
-    icon: "📩",
-  },
-];
   return (
-    <div className="animate-fade-in" style={{ padding: '2rem' }}>
+    <div className="animate-fade-in" style={{ padding: '2.5rem', position: 'relative' }}>
       
-      {/* Premium Header */}
-      <div className="page-header authentic-header" style={{ marginBottom: '2rem' }}>
-        <div>
-          <div className="header-title-row">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '2rem', fontWeight: '800', letterSpacing: '-0.02em', margin: 0 }}>
-              <div style={{ padding: '10px', background: 'var(--text-primary)', color: 'var(--bg-color)', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                <ShieldCheck size={24} />
+      {/* Background glow for premium feel */}
+      <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+      <div style={{ position: 'absolute', top: '40%', right: '-10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Premium Header */}
+        <div className="page-header" style={{ marginBottom: '3rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1.5rem' }}>
+          <div>
+            <div className="header-title-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+              <div style={{ padding: '12px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '16px', display: 'flex', boxShadow: '0 8px 25px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <ShieldCheck size={28} color="#3b82f6" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.5))' }} />
               </div>
-              Authorization Desk
-            </h1>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #ffffff 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
+                Authorization Desk
+              </h1>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p className="header-subtitle" style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <Key size={18} style={{ color: 'var(--accent)' }} /> Manage secure terminal access and monitor voter activity.
+              </p>
+              
+              {/* Emergency Lockdown Toggle */}
+              <button
+                onClick={toggleLockdown}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px',
+                  fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer',
+                  border: isLockdown ? 'none' : '1px solid rgba(239,68,68,0.3)',
+                  background: isLockdown ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' : 'rgba(239,68,68,0.05)',
+                  color: isLockdown ? '#fff' : 'var(--danger)',
+                  boxShadow: isLockdown ? '0 8px 25px rgba(239,68,68,0.4)' : 'none',
+                  animation: isLockdown ? 'pulse 2s infinite' : 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <AlertTriangle size={20} />
+                {isLockdown ? 'LIFT LOCKDOWN' : 'EMERGENCY FREEZE'}
+              </button>
+            </div>
           </div>
-          <p className="header-subtitle" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Key size={16} style={{ color: 'var(--accent)' }} /> Manage secure terminal access for student voters.
-          </p>
         </div>
 
-      </div>
+        {/* Dashboard Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+          {dashboardStats.map((stat, i) => (
+            <div 
+              key={i} 
+              className="glass-panel stat-card" 
+              style={{ 
+                padding: '1.75rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '1.25rem', 
+                background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))', 
+                border: '1px solid rgba(255,255,255,0.08)', 
+                borderRadius: '20px',
+                transition: 'all 0.3s ease',
+                position: 'relative',
+                overflow: 'hidden',
+                animation: `fadeUp 0.5s ease-out ${i * 0.1}s backwards` 
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 12px 30px rgba(0,0,0,0.1)`; e.currentTarget.style.borderColor = `rgba(255,255,255,0.15)`; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+            >
+              <div style={{ background: stat.color, padding: '16px', borderRadius: '16px', display: 'flex', boxShadow: '0 8px 25px rgba(0,0,0,0.2)' }}>
+                {stat.icon}
+              </div>
+              <div>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.title}</p>
+                <h3 style={{ margin: '6px 0 0 0', fontSize: '2.5rem', color: 'var(--text-primary)', fontWeight: '800', letterSpacing: '-0.04em', lineHeight: 1 }}>{stat.value}</h3>
+              </div>
+            </div>
+          ))}
+        </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-        
         {/* Flagged Activity Log */}
-        <div>
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Flagged Activity</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {flaggedActivity.map(log => (
-              <Card key={log.id} style={{ 
-                borderLeft: log.severity === 'critical' ? '4px solid var(--danger)' : '4px solid var(--warning)',
-                padding: '1.25rem',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-              }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                  <AlertTriangle color={log.severity === 'critical' ? 'var(--danger)' : 'var(--warning)'} size={24} />
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{log.studentId}</h4>
-                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>{log.issue}</p>
+        {flaggedActivity.length > 0 && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+              <Activity size={20} color="var(--accent)" />
+              <h2 style={{ fontSize: '1.35rem', margin: 0, color: 'var(--text-primary)', fontWeight: '700', letterSpacing: '-0.01em' }}>Recent Security Flags</h2>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {flaggedActivity.map((log, i) => (
+                <div key={log.id} className="glass-panel" style={{ 
+                  padding: '1.5rem',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '20px',
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  animation: `slideDown 0.4s ease-out ${i * 0.1}s backwards`
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = log.severity === 'critical' ? '0 12px 30px rgba(239,68,68,0.15)' : '0 12px 30px rgba(245,158,11,0.15)'; e.currentTarget.style.borderColor = log.severity === 'critical' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'; e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))'; }}
+                onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))'; }}
+                >
+                  {/* Severity Indicator Line */}
+                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px', background: log.severity === 'critical' ? 'var(--danger)' : 'var(--warning)', boxShadow: `0 0 15px ${log.severity === 'critical' ? 'var(--danger)' : 'var(--warning)'}` }}></div>
+                  
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', paddingLeft: '8px' }}>
+                    <div style={{ padding: '12px', background: log.severity === 'critical' ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)', borderRadius: '14px', border: `1px solid ${log.severity === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`, display: 'flex' }}>
+                      <AlertTriangle color={log.severity === 'critical' ? 'var(--danger)' : 'var(--warning)'} size={24} />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: '700', letterSpacing: '-0.01em' }}>{log.studentId}</h4>
+                      <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{log.issue}</p>
+                    </div>
+                  </div>
+                  
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>{log.time}</span>
+                    <button className="btn btn-secondary" style={{ padding: '8px 20px', fontSize: '0.9rem', fontWeight: '600', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.3s ease' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>Review Case</button>
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{log.time}</span>
-                  <div style={{ marginTop: '8px' }}>
-                    <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>Review</button>
-                  </div>
-                </div>
-              </Card>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-{/* Student Verification */}
-<div>
-  <h2
-    style={{
-      fontSize: "1.25rem",
-      marginBottom: "1rem",
-      color: "var(--text-primary)",
-    }}
-  >
-    Student Verification
-  </h2>
-
-  <Card style={{ padding: "1.5rem" }}>
-    <h3
-      style={{
-        fontSize: "1.1rem",
-        marginBottom: "0.5rem",
-      }}
-    >
-      Verify Student
-    </h3>
-
-    <p
-      style={{
-        color: "var(--text-secondary)",
-        fontSize: "0.9rem",
-        marginBottom: "1.5rem",
-      }}
-    >
-      Search a student before allowing access to the voting booth.
-    </p>
-
-    <div className="form-group">
-      <input
-        className="form-control"
-        type="text"
-        placeholder="Enter Student ID"
-      />
-    </div>
-
-    <button
-      className="btn btn-primary"
-      style={{
-        width: "100%",
-        justifyContent: "center",
-      }}
-    >
-      Search Student
-    </button>
-
-    <hr style={{ margin: "24px 0" }} />
-
-    <div style={{ display: "grid", gap: "14px" }}>
-      <div>
-        <small>Name</small>
-        <div style={{ fontWeight: 600 }}>—</div>
-      </div>
-
-      <div>
-        <small>Faculty</small>
-        <div style={{ fontWeight: 600 }}>—</div>
-      </div>
-
-      <div>
-        <small>Semester</small>
-        <div style={{ fontWeight: 600 }}>—</div>
-      </div>
-
-      <div>
-        <small>Verification Status</small>
-        <div className="badge">Not Verified</div>
-      </div>
-
-      <div>
-        <small>Voting Status</small>
-        <div className="badge">Not Voted</div>
-      </div>
-    </div>
-
-    <button
-      className="btn btn-success"
-      style={{
-        marginTop: "24px",
-        width: "100%",
-        justifyContent: "center",
-      }}
-    >
-      Verify Identity
-    </button>
-  </Card>
-</div>
       </div>
     </div>
   );

@@ -1,210 +1,128 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Users, User, Lock, Mail, KeyRound, LogIn, ShieldCheck, EyeOff } from 'lucide-react';
+import { Shield, User, Lock, EyeOff, Eye, LogIn, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '@/context/AuthContext';
-import { useKioskContext } from '@/context/KioskContext';
 import '@/pages/home.css';
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState('admin');
   const navigate = useNavigate();
-
-  // Voter State
-  const { authenticateVoter } = useKioskContext();
-  const [studentId, setStudentId] = useState('');
-  const [voterError, setVoterError] = useState('');
-
-  // Admin State
   const { login } = useAuthContext();
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [adminError, setAdminError] = useState('');
+  
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleVoterLogin = (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    if (authenticateVoter(studentId.toUpperCase())) {
-      setVoterError('');
-      navigate('/vote/ballot');
-    } else {
-      setVoterError('Invalid Student ID.');
-    }
-  };
-
-  const handleAdminLogin = (e) => {
-    e.preventDefault();
-    if (adminEmail === 'admin' && adminPassword === 'admin123') {
-      login({ role: 'admin', name: 'System Admin', email: adminEmail });
-      navigate('/admin');
-    } else {
-      setAdminError('Invalid credentials.');
-    }
+    setIsLoading(true);
+    
+    // Simulate slight network delay for better UX
+    setTimeout(() => {
+      if (username === 'admin' && password === 'admin123') {
+        login({ role: 'admin', name: 'System Admin', email: username });
+        navigate('/admin');
+      } else if (username === 'mod' && password === 'mod123') {
+        login({ role: 'moderator', name: 'Desk Moderator', email: username });
+        navigate('/mod');
+      } else if (username === 'voter' && password === 'voter123') {
+        login({ role: 'voter', name: 'Student Voter', email: username });
+        navigate('/vote/booth-01');
+      } else {
+        setError('Invalid username or password.');
+        setIsLoading(false);
+      }
+    }, 600);
   };
 
   return (
     <div className="landing-container">
-      {/* Abstract Background Elements */}
-      <div className="bg-shape bg-shape-1"></div>
-      <div className="bg-shape bg-shape-2"></div>
-      <div className="bg-shape bg-shape-3"></div>
-      
-      <div className="login-card">
-        
-        {/* Header Section */}
+      <div className="glass-card login-card">
         <div className="login-header">
-          <div className="logo-icon-wrapper">
-            <Shield size={42} strokeWidth={2} />
-            <div className="logo-inner-keyhole"></div>
+          <div className="logo-container">
+            <img src="/logo.png" alt="School Election Logo" className="logo-img" />
+            <div className="logo-glow"></div>
           </div>
           <h1 className="logo-text">
-            <span>School</span><span className="text-blue">Election</span>
+            School<span className="text-gradient">Election</span>
           </h1>
-          <p className="subtitle">Secure Access Portal</p>
+          <p className="subtitle">Centralised Authentication System</p>
         </div>
 
-        <div className="divider-text">
-          <span>Login to your account</span>
-        </div>
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="input-group">
+            <User size={20} className="input-icon left-icon" />
+            <input 
+              type="text" 
+              placeholder="Username" 
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setError(''); }}
+              required
+              className="premium-input"
+            />
+          </div>
 
-        {/* Tabs */}
-        <div className="tabs-container">
-          <button 
-            type="button"
-            className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('admin')}
-          >
-            <ShieldCheck size={18} /> Administrator
+          <div className="input-group">
+            <Lock size={20} className="input-icon left-icon" />
+            <input 
+              type={showPassword ? 'text' : 'password'} 
+              placeholder="Password" 
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(''); }}
+              required
+              className="premium-input"
+            />
+            <button 
+              type="button"
+              className="toggle-password" 
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+            </button>
+          </div>
+
+          {error && <div className="error-text animate-shake">{error}</div>}
+
+          <div className="form-options">
+            <label className="custom-checkbox">
+              <input type="checkbox" />
+              <span className="checkmark"></span>
+              <span className="checkbox-label">Remember me</span>
+            </label>
+            <a href="#" className="forgot-link">Forgot password?</a>
+          </div>
+
+          <button type="submit" className="primary-btn" disabled={isLoading}>
+            {isLoading ? (
+              <div className="spinner"></div>
+            ) : (
+              <>
+                <LogIn size={20} /> 
+                <span>Sign In</span>
+              </>
+            )}
           </button>
-          <button 
-            type="button"
-            className={`tab-btn ${activeTab === 'mod' ? 'active' : ''}`}
-            onClick={() => setActiveTab('mod')}
-          >
-            <Users size={18} /> Moderator
-          </button>
-          <button 
-            type="button"
-            className={`tab-btn ${activeTab === 'voter' ? 'active' : ''}`}
-            onClick={() => setActiveTab('voter')}
-          >
-            <User size={18} /> Voter
-          </button>
-        </div>
+        </form>
 
-        {/* Forms */}
-        <div className="form-container">
-          {activeTab === 'admin' && (
-            <form onSubmit={handleAdminLogin}>
-              <div className="input-group">
-                <User size={20} className="input-icon left-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Username" 
-                  value={adminEmail}
-                  onChange={(e) => { setAdminEmail(e.target.value); setAdminError(''); }}
-                  required
-                />
-              </div>
-
-              <div className="input-group">
-                <Lock size={20} className="input-icon left-icon" />
-                <input 
-                  type="password" 
-                  placeholder="Password" 
-                  value={adminPassword}
-                  onChange={(e) => { setAdminPassword(e.target.value); setAdminError(''); }}
-                  required
-                />
-                <EyeOff size={20} className="input-icon right-icon" />
-              </div>
-
-              {adminError && <div className="error-text">{adminError}</div>}
-
-              <div className="form-options">
-                <label className="checkbox-container">
-                  <input type="checkbox" />
-                  <span className="checkmark"></span>
-                  Remember me
-                </label>
-                <a href="#" className="forgot-link">Forgot password?</a>
-              </div>
-
-              <button type="submit" className="primary-btn">
-                <LogIn size={20} /> Login
-              </button>
-            </form>
-          )}
-
-          {activeTab === 'voter' && (
-            <form onSubmit={handleVoterLogin}>
-              <div className="input-group">
-                <KeyRound size={20} className="input-icon left-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Student ID (e.g. S-1001)" 
-                  value={studentId}
-                  onChange={(e) => { setStudentId(e.target.value); setVoterError(''); }}
-                  required
-                  className="uppercase-input"
-                />
-              </div>
-
-              {voterError && <div className="error-text">{voterError}</div>}
-
-              <div className="form-options">
-                <label className="checkbox-container">
-                  <input type="checkbox" />
-                  <span className="checkmark"></span>
-                  Remember me
-                </label>
-              </div>
-
-              <button type="submit" className="primary-btn">
-                <LogIn size={20} /> Authenticate & Vote
-              </button>
-            </form>
-          )}
-
-          {activeTab === 'mod' && (
-            <div className="mod-placeholder">
-              <div className="input-group">
-                <Mail size={20} className="input-icon left-icon" />
-                <input type="text" placeholder="Moderator Email" disabled />
-              </div>
-              <div className="input-group">
-                <Lock size={20} className="input-icon left-icon" />
-                <input type="password" placeholder="Password" disabled />
-              </div>
-              
-              <div className="form-options">
-                <label className="checkbox-container">
-                  <input type="checkbox" disabled />
-                  <span className="checkmark disabled"></span>
-                  Remember me
-                </label>
-              </div>
-
-              <button type="button" className="primary-btn" onClick={() => navigate('/mod')}>
-                <LogIn size={20} /> Continue to Portal
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="divider-text">
+        <div className="divider">
           <span>OR</span>
         </div>
 
-        <div className="footer-links">
-          <span>Secure</span>
-          <span className="dot">•</span>
-          <span>Transparent</span>
-          <span className="dot">•</span>
-          <span>Democratic</span>
-        </div>
+        <button 
+          className="secondary-btn launch-terminal-btn"
+          onClick={() => navigate('/vote/booth-01')}
+          type="button"
+        >
+          <Shield size={18} className="btn-icon" />
+          <span>Launch Voting Terminal</span>
+          <ArrowRight size={18} className="btn-icon-right" />
+        </button>
+
       </div>
 
       <div className="page-footer">
-        © 2026 School Election System. All rights reserved.
+        © 2026 School Election System. Secure, transparent, and democratic.
       </div>
     </div>
   );
