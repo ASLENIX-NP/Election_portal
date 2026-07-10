@@ -1,147 +1,247 @@
 import React from 'react';
-import { Card } from '@/components/common/Card';
-import { ShieldCheck, AlertTriangle, Key, Activity, Users, LayoutDashboard, Flag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ShieldCheck, AlertTriangle, Activity, Users, Flag, UserCheck, MonitorPlay, RefreshCcw, ChevronRight, Clock, Zap, CheckCircle2, Lock } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
 
 export default function ModDashboard() {
-  const { kioskStatus, activeStudent, isLockdown, toggleLockdown } = useKioskContext();
+  const navigate = useNavigate();
+  const { kioskStatus, activeStudent, isLockdown, toggleLockdown, booths, roster, auditLogs } = useKioskContext();
 
-  // Mock Flagged Data
-  const flaggedActivity = [];
+  const verifiedToday = roster.filter(s => s.status === 'voted').length;
+  const eligibleCount = roster.filter(s => s.status === 'eligible').length;
+  const onlineBooths = booths.filter(b => b.status !== 'offline').length;
+  const recentLogs = auditLogs.slice(0, 5);
 
   const dashboardStats = [
-    { title: "Verified Today", value: "1,248", color: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", icon: <Users size={28} color="#fff" /> },
-    { title: "Active Kiosks", value: "42", color: "linear-gradient(135deg, #10b981 0%, #059669 100%)", icon: <Activity size={28} color="#fff" /> },
-    { title: "Open Alerts", value: "3", color: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", icon: <AlertTriangle size={28} color="#fff" /> },
-    { title: "Support Flags", value: "5", color: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", icon: <Flag size={28} color="#fff" /> },
+    { title: 'Verified Today', value: verifiedToday.toString(), gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', lightBg: 'rgba(59,130,246,0.08)', icon: <UserCheck size={22} color="#fff" /> },
+    { title: 'Eligible Voters', value: eligibleCount.toString(), gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', lightBg: 'rgba(16,185,129,0.08)', icon: <Users size={22} color="#fff" /> },
+    { title: 'Active Kiosks', value: `${onlineBooths}/${booths.length}`, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', lightBg: 'rgba(139,92,246,0.08)', icon: <MonitorPlay size={22} color="#fff" /> },
+    { title: 'Open Alerts', value: isLockdown ? '1' : '0', gradient: isLockdown ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', lightBg: isLockdown ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)', icon: <AlertTriangle size={22} color="#fff" /> },
   ];
 
-  return (
-    <div className="animate-fade-in" style={{ padding: '2.5rem', position: 'relative' }}>
-      
-      {/* Background glow for premium feel */}
-      <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
-      <div style={{ position: 'absolute', top: '40%', right: '-10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(80px)', zIndex: 0, pointerEvents: 'none' }}></div>
+  const quickActions = [
+    { label: 'Verify Voters', desc: 'Search & authorize student identity', icon: <UserCheck size={20} />, color: '#3b82f6', path: '/mod/verify' },
+    { label: 'Monitor Kiosks', desc: 'View live terminal status', icon: <MonitorPlay size={20} />, color: '#10b981', path: '/mod/booths' },
+    { label: 'Reset Credential', desc: 'Issue override passes', icon: <RefreshCcw size={20} />, color: '#f59e0b', path: '/mod/reset' },
+    { label: 'Audit Logs', desc: 'View full event timeline', icon: <Activity size={20} />, color: '#8b5cf6', path: '/mod/audit' },
+  ];
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Premium Header */}
-        <div className="page-header" style={{ marginBottom: '3rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1.5rem' }}>
-          <div>
-            <div className="header-title-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
-              <div style={{ padding: '12px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '16px', display: 'flex', boxShadow: '0 8px 25px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <ShieldCheck size={28} color="#3b82f6" style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.5))' }} />
-              </div>
-              <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #ffffff 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
-                Authorization Desk
-              </h1>
+  const getLogIcon = (type) => {
+    switch (type) {
+      case 'critical': return <AlertTriangle size={15} color="#ef4444" />;
+      case 'security': return <ShieldCheck size={15} color="#3b82f6" />;
+      case 'success': return <CheckCircle2 size={15} color="#10b981" />;
+      case 'warning': return <AlertTriangle size={15} color="#f59e0b" />;
+      default: return <Activity size={15} color="#64748b" />;
+    }
+  };
+
+  const getLogBg = (type) => {
+    switch (type) {
+      case 'critical': return 'rgba(239,68,68,0.08)';
+      case 'security': return 'rgba(59,130,246,0.08)';
+      case 'success': return 'rgba(16,185,129,0.08)';
+      case 'warning': return 'rgba(245,158,11,0.08)';
+      default: return '#f8fafc';
+    }
+  };
+
+  return (
+    <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+      
+      {/* ─── Header ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
+            <div style={{ padding: '10px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
+              <ShieldCheck size={24} color="#3b82f6" />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p className="header-subtitle" style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                <Key size={18} style={{ color: 'var(--accent)' }} /> Manage secure terminal access and monitor voter activity.
-              </p>
-              
-              {/* Emergency Lockdown Toggle */}
-              <button
-                onClick={toggleLockdown}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px',
-                  fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer',
-                  border: isLockdown ? 'none' : '1px solid rgba(239,68,68,0.3)',
-                  background: isLockdown ? 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' : 'rgba(239,68,68,0.05)',
-                  color: isLockdown ? '#fff' : 'var(--danger)',
-                  boxShadow: isLockdown ? '0 8px 25px rgba(239,68,68,0.4)' : 'none',
-                  animation: isLockdown ? 'pulse 2s infinite' : 'none',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <AlertTriangle size={20} />
-                {isLockdown ? 'LIFT LOCKDOWN' : 'EMERGENCY FREEZE'}
-              </button>
-            </div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', margin: 0 }}>
+              Authorization Desk
+            </h1>
           </div>
+          <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Zap size={15} color="#3b82f6" /> Manage secure terminal access and monitor voter activity
+          </p>
         </div>
 
-        {/* Dashboard Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-          {dashboardStats.map((stat, i) => (
-            <div 
-              key={i} 
-              className="glass-panel stat-card" 
-              style={{ 
-                padding: '1.75rem', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '1.25rem', 
-                background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))', 
-                border: '1px solid rgba(255,255,255,0.08)', 
-                borderRadius: '20px',
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                overflow: 'hidden',
-                animation: `fadeUp 0.5s ease-out ${i * 0.1}s backwards` 
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 12px 30px rgba(0,0,0,0.1)`; e.currentTarget.style.borderColor = `rgba(255,255,255,0.15)`; }}
-              onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-            >
-              <div style={{ background: stat.color, padding: '16px', borderRadius: '16px', display: 'flex', boxShadow: '0 8px 25px rgba(0,0,0,0.2)' }}>
+        {/* Emergency Lockdown */}
+        <button
+          onClick={toggleLockdown}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px',
+            fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit',
+            border: isLockdown ? 'none' : '1px solid rgba(239,68,68,0.25)',
+            background: isLockdown ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239,68,68,0.06)',
+            color: isLockdown ? '#fff' : '#ef4444',
+            boxShadow: isLockdown ? '0 6px 20px rgba(239,68,68,0.3)' : 'none',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          {isLockdown ? <Lock size={18} /> : <AlertTriangle size={18} />}
+          {isLockdown ? 'LIFT LOCKDOWN' : 'EMERGENCY FREEZE'}
+        </button>
+      </div>
+
+      {/* Lockdown Banner */}
+      {isLockdown && (
+        <div style={{ padding: '1rem 1.25rem', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '8px', background: 'rgba(239,68,68,0.1)', borderRadius: '10px', display: 'flex' }}>
+            <AlertTriangle size={20} color="#ef4444" />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, color: '#ef4444', fontSize: '0.9rem' }}>EMERGENCY LOCKDOWN ACTIVE</p>
+            <p style={{ margin: '2px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>All terminals are frozen. Voting cannot proceed until lockdown is lifted.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Stat Cards ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+        {dashboardStats.map((stat, i) => (
+          <div 
+            key={i}
+            style={{ 
+              padding: '1.25rem',
+              background: '#fff',
+              border: '1px solid var(--border-color)',
+              borderRadius: '14px',
+              transition: 'all 0.3s ease',
+              cursor: 'default'
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(0,0,0,0.05)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{stat.title}</p>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: stat.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {stat.icon}
               </div>
-              <div>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.title}</p>
-                <h3 style={{ margin: '6px 0 0 0', fontSize: '2.5rem', color: 'var(--text-primary)', fontWeight: '800', letterSpacing: '-0.04em', lineHeight: 1 }}>{stat.value}</h3>
-              </div>
             </div>
-          ))}
+            <span style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1 }}>{stat.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ─── Main Grid ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+        
+        {/* Quick Actions */}
+        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Zap size={18} color="#3b82f6" /> Quick Actions
+            </h3>
+          </div>
+          <div style={{ padding: '0.75rem' }}>
+            {quickActions.map((action, i) => (
+              <button 
+                key={i}
+                onClick={() => navigate(action.path)}
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: '14px', padding: '1rem 1.25rem', width: '100%',
+                  background: 'transparent', border: '1px solid transparent', borderRadius: '12px', cursor: 'pointer',
+                  transition: 'all 0.25s ease', textAlign: 'left', fontFamily: 'inherit'
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.border = '1px solid var(--border-color)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.border = '1px solid transparent'; }}
+              >
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: `${action.color}12`, color: action.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {action.icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{action.label}</p>
+                  <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '0.82rem' }}>{action.desc}</p>
+                </div>
+                <ChevronRight size={18} color="#cbd5e1" />
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Flagged Activity Log */}
-        {flaggedActivity.length > 0 && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
-              <Activity size={20} color="var(--accent)" />
-              <h2 style={{ fontSize: '1.35rem', margin: 0, color: 'var(--text-primary)', fontWeight: '700', letterSpacing: '-0.01em' }}>Recent Security Flags</h2>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {flaggedActivity.map((log, i) => (
-                <div key={log.id} className="glass-panel" style={{ 
-                  padding: '1.5rem',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '20px',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  animation: `slideDown 0.4s ease-out ${i * 0.1}s backwards`
-                }}
-                onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = log.severity === 'critical' ? '0 12px 30px rgba(239,68,68,0.15)' : '0 12px 30px rgba(245,158,11,0.15)'; e.currentTarget.style.borderColor = log.severity === 'critical' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'; e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))'; }}
-                onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))'; }}
+        {/* Recent Activity */}
+        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={18} color="#8b5cf6" /> Recent Activity
+            </h3>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{auditLogs.length} events</span>
+          </div>
+          <div style={{ padding: '0.75rem 1rem', flex: 1, overflowY: 'auto', maxHeight: '340px' }}>
+            {recentLogs.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem 0', fontSize: '0.9rem' }}>No activity recorded yet.</div>
+            ) : (
+              recentLogs.map((log) => (
+                <div key={log.id} style={{ display: 'flex', gap: '10px', padding: '0.75rem', borderRadius: '10px', marginBottom: '0.25rem', transition: 'background 0.2s ease' }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  {/* Severity Indicator Line */}
-                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px', background: log.severity === 'critical' ? 'var(--danger)' : 'var(--warning)', boxShadow: `0 0 15px ${log.severity === 'critical' ? 'var(--danger)' : 'var(--warning)'}` }}></div>
-                  
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', paddingLeft: '8px' }}>
-                    <div style={{ padding: '12px', background: log.severity === 'critical' ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)', borderRadius: '14px', border: `1px solid ${log.severity === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`, display: 'flex' }}>
-                      <AlertTriangle color={log.severity === 'critical' ? 'var(--danger)' : 'var(--warning)'} size={24} />
-                    </div>
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: '700', letterSpacing: '-0.01em' }}>{log.studentId}</h4>
-                      <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{log.issue}</p>
-                    </div>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: getLogBg(log.type), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                    {getLogIcon(log.type)}
                   </div>
-                  
-                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>{log.time}</span>
-                    <button className="btn btn-secondary" style={{ padding: '8px 20px', fontSize: '0.9rem', fontWeight: '600', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.3s ease' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>Review Case</button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 600, color: '#0f172a', lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.desc}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>{log.by}</span>
+                      <span style={{ fontSize: '0.65rem', color: '#cbd5e1' }}>•</span>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <Clock size={10} /> {new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
-        )}
-
+          <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--border-color)' }}>
+            <button 
+              onClick={() => navigate('/mod/audit')}
+              style={{ width: '100%', padding: '10px', background: '#f8fafc', border: '1px dashed var(--border-color)', borderRadius: '10px', color: '#64748b', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              onMouseOver={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#0f172a'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; }}
+            >
+              View Full Audit Log <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* ─── Kiosk Status Strip ─── */}
+      <div style={{ marginTop: '1.25rem', background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <MonitorPlay size={18} color="#10b981" /> Terminal Overview
+          </h3>
+          <button
+            onClick={() => navigate('/mod/booths')}
+            style={{ fontSize: '0.82rem', color: '#3b82f6', fontWeight: 600, cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            Manage <ChevronRight size={14} />
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${booths.length}, 1fr)`, gap: '0' }}>
+          {booths.map((booth, i) => {
+            const isOffline = booth.status === 'offline';
+            const statusColor = isLockdown ? '#ef4444' : isOffline ? '#94a3b8' : '#10b981';
+            const statusLabel = isLockdown ? 'LOCKED' : isOffline ? 'OFFLINE' : booth.status.toUpperCase();
+            
+            return (
+              <div key={booth.id} style={{ padding: '1.25rem 1.5rem', borderRight: i < booths.length - 1 ? '1px solid var(--border-color)' : 'none', opacity: isOffline && !isLockdown ? 0.5 : 1, transition: 'opacity 0.3s ease' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <MonitorPlay size={18} color={statusColor} />
+                  <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{booth.name}</span>
+                </div>
+                <p style={{ margin: '0 0 8px 0', fontSize: '0.82rem', color: '#94a3b8' }}>{booth.location}</p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '20px', background: `${statusColor}12`, border: `1px solid ${statusColor}25` }}>
+                  {!isOffline && !isLockdown && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, animation: 'pulse 2s infinite' }}></span>}
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: statusColor, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{statusLabel}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
     </div>
   );
 }

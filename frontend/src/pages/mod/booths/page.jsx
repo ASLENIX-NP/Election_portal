@@ -1,231 +1,267 @@
 import React, { useState } from 'react';
 import { useKioskContext } from '@/context/KioskContext';
-import { MonitorPlay, ShieldAlert, Power, Zap, ChevronRight, Laptop, LayoutGrid, Map as MapIcon } from 'lucide-react';
+import { MonitorPlay, ShieldAlert, Power, Zap, ChevronRight, Laptop, LayoutGrid, Map as MapIcon, AlertTriangle, Wifi, WifiOff, User, XCircle } from 'lucide-react';
 
 export default function ModBoothsPage() {
-  const { booths, updateBoothStatus, activeStudent, enableVoting, cancelVoting, isLockdown } = useKioskContext();
+  const { booths, updateBoothStatus, activeStudent, enableVoting, cancelVoting, isLockdown, roster } = useKioskContext();
   const [selectedBooth, setSelectedBooth] = useState(null);
   const [passInput, setPassInput] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
+  const [viewMode, setViewMode] = useState('grid');
+
+  const onlineCount = booths.filter(b => b.status !== 'offline').length;
+  const offlineCount = booths.filter(b => b.status === 'offline').length;
+
+  // Check if a booth has an active session via localStorage
+  const getBoothSession = (boothId) => {
+    try { return localStorage.getItem(`activeStudent_${boothId}`); } catch { return null; }
+  };
 
   return (
-    <div className="animate-fade-in" style={{ padding: '2.5rem', position: 'relative' }}>
+    <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
       
-      {/* Ambient background */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '500px', height: '500px', background: isLockdown ? 'radial-gradient(circle, rgba(239,68,68,0.1) 0%, rgba(0,0,0,0) 70%)' : 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none', transition: 'background 0.5s ease' }}></div>
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div className="page-header" style={{ marginBottom: '3rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <div className="header-title-row" style={{ marginBottom: '12px' }}>
-              <h1 style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '2.25rem', fontWeight: '800', letterSpacing: '-0.03em', margin: 0, background: 'linear-gradient(135deg, #fff 0%, #94a3b8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                <div style={{ padding: '12px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '16px', display: 'flex', boxShadow: '0 8px 25px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <Laptop size={28} color={isLockdown ? "#ef4444" : "#10b981"} />
-                </div>
-                Live Kiosk Network
-              </h1>
+      {/* ─── Header ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
+            <div style={{ padding: '10px', background: isLockdown ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '14px', display: 'flex', boxShadow: isLockdown ? '0 4px 12px rgba(239,68,68,0.25)' : '0 4px 12px rgba(16,185,129,0.25)' }}>
+              <Laptop size={24} color="#fff" />
             </div>
-            <p className="header-subtitle" style={{ fontSize: '1.05rem', color: 'var(--text-secondary)' }}>
-              Manage physical voting terminals, monitor connection status, and securely start voter sessions.
-            </p>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', margin: 0 }}>
+              Live Kiosk Network
+            </h1>
           </div>
-          
-          <div style={{ display: 'flex', gap: '10px', background: 'rgba(0,0,0,0.1)', padding: '6px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>
+            Manage voting terminals, monitor status, and authorize voter sessions.
+          </p>
+        </div>
+
+        {/* View Toggle + Status Badges */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ padding: '6px 14px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Wifi size={14} color="#10b981" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#10b981' }}>{onlineCount} Online</span>
+            </div>
+            <div style={{ padding: '6px 14px', background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <WifiOff size={14} color="#94a3b8" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8' }}>{offlineCount} Offline</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
             <button 
               onClick={() => setViewMode('grid')}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'grid' ? '#3b82f6' : 'transparent', color: viewMode === 'grid' ? '#fff' : 'var(--text-secondary)', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '7px', border: 'none', background: viewMode === 'grid' ? '#fff' : 'transparent', color: viewMode === 'grid' ? '#0f172a' : '#94a3b8', fontWeight: 600, cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit', boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.2s' }}
             >
-              <LayoutGrid size={18} /> Grid List
+              <LayoutGrid size={15} /> Grid
             </button>
             <button 
               onClick={() => setViewMode('map')}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'map' ? '#3b82f6' : 'transparent', color: viewMode === 'map' ? '#fff' : 'var(--text-secondary)', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '7px', border: 'none', background: viewMode === 'map' ? '#fff' : 'transparent', color: viewMode === 'map' ? '#0f172a' : '#94a3b8', fontWeight: 600, cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit', boxShadow: viewMode === 'map' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.2s' }}
             >
-              <MapIcon size={18} /> Floor Plan
+              <MapIcon size={15} /> Floor Plan
             </button>
           </div>
         </div>
+      </div>
 
-        {isLockdown && (
-          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(185,28,28,0.1) 100%)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '16px', animation: 'pulse 2s infinite' }}>
-            <ShieldAlert size={32} color="var(--danger)" />
-            <div>
-              <h2 style={{ margin: 0, color: 'var(--danger)', fontSize: '1.25rem', fontWeight: '800' }}>EMERGENCY LOCKDOWN ACTIVE</h2>
-              <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.8)' }}>All terminals are frozen. Voting assignments cannot be made until lockdown is lifted from the Authorization Desk.</p>
-            </div>
+      {/* Lockdown Banner */}
+      {isLockdown && (
+        <div style={{ padding: '1rem 1.25rem', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '8px', background: 'rgba(239,68,68,0.1)', borderRadius: '10px', display: 'flex' }}>
+            <ShieldAlert size={20} color="#ef4444" />
           </div>
-        )}
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, color: '#ef4444', fontSize: '0.9rem' }}>EMERGENCY LOCKDOWN ACTIVE</p>
+            <p style={{ margin: '2px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>All terminals are frozen. Voting cannot proceed until lockdown is lifted.</p>
+          </div>
+        </div>
+      )}
 
-        {viewMode === 'grid' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '2rem' }}>
-            {booths.map((booth, i) => {
-              const isIdle = booth.status === 'idle';
-              const isOffline = booth.status === 'offline';
-              const isActiveSession = activeStudent && booth.status !== 'offline' && selectedBooth !== booth.id;
+      {/* ─── Grid View ─── */}
+      {viewMode === 'grid' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
+          {booths.map((booth) => {
+            const isOffline = booth.status === 'offline';
+            const boothSession = getBoothSession(booth.id);
+            const hasSession = !!boothSession;
 
-              return (
-                <div key={booth.id} className="glass-panel" style={{ 
-                  padding: '0', 
-                  overflow: 'hidden',
-                  animation: `fadeUp 0.5s ease-out ${i * 0.15}s backwards`,
-                  boxShadow: isActiveSession ? '0 15px 35px rgba(245,158,11,0.2)' : isLockdown ? '0 10px 30px rgba(239,68,68,0.1)' : '0 10px 30px rgba(0,0,0,0.05)',
-                  border: isActiveSession ? '1px solid rgba(245,158,11,0.4)' : isLockdown ? '1px solid rgba(239,68,68,0.3)' : '1px solid var(--border-color)',
-                  transition: 'all 0.3s ease',
-                  opacity: isLockdown ? 0.7 : 1
-                }}>
-                  {/* Card Header Strip */}
-                  <div style={{ height: '6px', background: isLockdown ? 'var(--danger)' : isIdle ? 'linear-gradient(90deg, #10b981, #34d399)' : isOffline ? 'var(--text-secondary)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)' }}></div>
-                  
-                  <div style={{ padding: '1.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                      <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                        <div style={{ padding: '12px', background: isLockdown ? 'rgba(239,68,68,0.1)' : isOffline ? 'rgba(0,0,0,0.05)' : isActiveSession ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', borderRadius: '14px', color: isLockdown ? 'var(--danger)' : isOffline ? 'var(--text-secondary)' : isActiveSession ? 'var(--warning)' : 'var(--success)' }}>
-                          <MonitorPlay size={26} />
-                        </div>
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: '1.35rem', color: 'var(--text-primary)', fontWeight: '700', letterSpacing: '-0.01em' }}>{booth.name}</h3>
-                          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px', fontWeight: '500' }}>{booth.location}</p>
-                        </div>
+            const statusColor = isLockdown ? '#ef4444' : isOffline ? '#94a3b8' : hasSession ? '#f59e0b' : '#10b981';
+            const statusLabel = isLockdown ? 'LOCKED' : isOffline ? 'OFFLINE' : hasSession ? 'IN SESSION' : 'READY';
+            const statusBg = isLockdown ? 'rgba(239,68,68,0.06)' : isOffline ? '#f8fafc' : hasSession ? 'rgba(245,158,11,0.06)' : 'rgba(16,185,129,0.06)';
+
+            return (
+              <div key={booth.id} style={{ 
+                background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', 
+                overflow: 'hidden', transition: 'all 0.3s ease',
+                opacity: isLockdown ? 0.7 : isOffline ? 0.6 : 1
+              }}
+                onMouseOver={(e) => { if (!isLockdown) { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(0,0,0,0.06)'; }}}
+                onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                {/* Status Bar */}
+                <div style={{ height: '3px', background: statusColor }}></div>
+                
+                <div style={{ padding: '1.25rem' }}>
+                  {/* Card Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${statusColor}12`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <MonitorPlay size={22} color={statusColor} />
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isLockdown ? 'rgba(239,68,68,0.1)' : isOffline ? 'rgba(0,0,0,0.05)' : 'rgba(16,185,129,0.1)', padding: '6px 12px', borderRadius: '20px', border: `1px solid ${isLockdown ? 'rgba(239,68,68,0.2)' : isOffline ? 'transparent' : 'rgba(16,185,129,0.2)'}` }}>
-                        {!isOffline && !isLockdown && <div className="pulse-dot" style={{ background: isActiveSession ? 'var(--warning)' : 'var(--success)' }}></div>}
-                        <span style={{ color: isLockdown ? 'var(--danger)' : isOffline ? 'var(--text-secondary)' : isActiveSession ? 'var(--warning)' : 'var(--success)', fontWeight: '700', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {isLockdown ? 'LOCKED' : isActiveSession ? 'VOTING...' : booth.status}
-                        </span>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a', fontWeight: 700 }}>{booth.name}</h3>
+                        <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '0.82rem', fontWeight: 500 }}>{booth.location}</p>
                       </div>
                     </div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', background: statusBg, border: `1px solid ${statusColor}20` }}>
+                      {!isOffline && !isLockdown && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, animation: 'pulse 2s infinite' }}></span>}
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: statusColor, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{statusLabel}</span>
+                    </div>
+                  </div>
 
-                    <hr style={{ margin: '1.5rem 0', borderColor: 'var(--border-color)', borderStyle: 'dashed' }} />
+                  {/* Active Session Info */}
+                  {hasSession && !isLockdown && !isOffline && (
+                    <div style={{ padding: '10px 12px', background: 'rgba(245,158,11,0.05)', borderRadius: '10px', border: '1px solid rgba(245,158,11,0.12)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <User size={14} color="#f59e0b" />
+                        </div>
+                        <div>
+                          <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Active Voter</p>
+                          <p style={{ margin: 0, fontSize: '0.9rem', color: '#0f172a', fontWeight: 700, fontFamily: 'monospace' }}>{boothSession}</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => cancelVoting(booth.id)}
+                        style={{ padding: '6px 12px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.78rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', transition: 'all 0.2s ease' }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#ef4444'; }}
+                      >
+                        <XCircle size={13} /> End
+                      </button>
+                    </div>
+                  )}
 
-                    {/* Active Session Premium View */}
-                    {isActiveSession && !isLockdown ? (
-                      <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.05) 100%)', borderRadius: '16px', border: '1px solid rgba(245,158,11,0.2)', marginBottom: '1.5rem', animation: 'fadeIn 0.4s ease' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <span style={{ fontSize: '0.85rem', color: '#d97706', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Secure Session Active</span>
-                          <ShieldAlert size={16} color="#d97706" />
-                        </div>
-                        <div style={{ fontSize: '1.25rem', color: 'var(--text-primary)', fontWeight: '700', fontFamily: 'monospace', letterSpacing: '1px', marginBottom: '16px' }}>
-                          PASS: {activeStudent}
-                        </div>
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      onClick={() => updateBoothStatus(booth.id, isOffline ? 'idle' : 'offline')}
+                      disabled={isLockdown}
+                      style={{ 
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        padding: '10px', fontWeight: 600, borderRadius: '10px', fontSize: '0.85rem',
+                        fontFamily: 'inherit', cursor: isLockdown ? 'not-allowed' : 'pointer',
+                        background: isOffline ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.06)',
+                        color: isOffline ? '#10b981' : '#ef4444', 
+                        border: `1px solid ${isOffline ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.12)'}`,
+                        transition: 'all 0.2s ease', opacity: isLockdown ? 0.5 : 1
+                      }}
+                    >
+                      <Power size={16} /> {isOffline ? 'Boot' : 'Shutdown'}
+                    </button>
+                    
+                    <button 
+                      onClick={() => setSelectedBooth(selectedBooth === booth.id ? null : booth.id)}
+                      disabled={isOffline || isLockdown}
+                      style={{ 
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        padding: '10px', fontWeight: 600, borderRadius: '10px', fontSize: '0.85rem',
+                        fontFamily: 'inherit', cursor: isOffline || isLockdown ? 'not-allowed' : 'pointer',
+                        background: isOffline || isLockdown ? '#f8fafc' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                        color: isOffline || isLockdown ? '#cbd5e1' : '#fff', border: 'none',
+                        boxShadow: isOffline || isLockdown ? 'none' : '0 4px 10px rgba(59,130,246,0.2)',
+                        transition: 'all 0.2s ease', opacity: isOffline || isLockdown ? 0.5 : 1
+                      }}
+                    >
+                      <Zap size={16} /> Authorize
+                    </button>
+                  </div>
+
+                  {/* Authorize Input Panel */}
+                  {selectedBooth === booth.id && !isOffline && !isLockdown && (
+                    <div style={{ marginTop: '10px', padding: '12px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>Authorize voter for {booth.name}</label>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. PASS-1001" 
+                          value={passInput}
+                          onChange={e => setPassInput(e.target.value)}
+                          style={{ 
+                            flex: 1, padding: '10px 14px', fontSize: '0.9rem', 
+                            background: '#fff', border: '1px solid var(--border-color)', borderRadius: '8px',
+                            outline: 'none', textTransform: 'uppercase', letterSpacing: '1px',
+                            fontFamily: 'monospace', color: '#0f172a', transition: 'border-color 0.2s ease'
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#3b82f6'; }}
+                          onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; }}
+                        />
                         <button 
-                          className="btn" 
-                          style={{ width: '100%', justifyContent: 'center', padding: '12px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '600', boxShadow: '0 4px 15px rgba(220,38,38,0.3)' }}
-                          onClick={cancelVoting}
+                          style={{ padding: '10px 16px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', boxShadow: '0 2px 8px rgba(59,130,246,0.25)' }}
+                          onClick={() => {
+                            if (passInput) {
+                              enableVoting(passInput, booth.id);
+                              setPassInput('');
+                              setSelectedBooth(null);
+                            }
+                          }}
                         >
-                          Force Terminate Session
+                          <ChevronRight size={20} color="#fff" />
                         </button>
                       </div>
-                    ) : (
-                      <>
-                        <div style={{ display: 'flex', gap: '12px', marginBottom: selectedBooth === booth.id ? '1rem' : 0 }}>
-                          <button 
-                            className="btn" 
-                            style={{ 
-                              flex: 1, justifyContent: 'center', padding: '12px', fontWeight: '600', borderRadius: '12px',
-                              background: isOffline ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'rgba(239,68,68,0.1)',
-                              color: isOffline ? '#fff' : 'var(--danger)', border: 'none',
-                              boxShadow: isOffline && !isLockdown ? '0 6px 15px rgba(16,185,129,0.2)' : 'none',
-                              transition: 'all 0.3s ease'
-                            }}
-                            onClick={() => updateBoothStatus(booth.id, isOffline ? 'idle' : 'offline')}
-                            disabled={isLockdown}
-                          >
-                            <Power size={18} /> {isOffline ? 'Boot Terminal' : 'Shutdown'}
-                          </button>
-                          
-                          <button 
-                            className="btn" 
-                            style={{ 
-                              flex: 1, justifyContent: 'center', padding: '12px', fontWeight: '600', borderRadius: '12px',
-                              background: isOffline || isLockdown ? 'rgba(0,0,0,0.05)' : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                              color: isOffline || isLockdown ? 'var(--text-secondary)' : '#fff', border: 'none',
-                              boxShadow: isOffline || isLockdown ? 'none' : '0 6px 15px rgba(59,130,246,0.3)',
-                              opacity: isOffline || isLockdown ? 0.6 : 1, transition: 'all 0.3s ease'
-                            }}
-                            onClick={() => setSelectedBooth(selectedBooth === booth.id ? null : booth.id)}
-                            disabled={isOffline || isLockdown}
-                          >
-                            <Zap size={18} /> Authorize Voter
-                          </button>
-                        </div>
-
-                        {/* Authorize Input Panel */}
-                        {selectedBooth === booth.id && !isOffline && !isLockdown && (
-                          <div style={{ padding: '1.25rem', background: 'rgba(0,0,0,0.03)', borderRadius: '14px', border: '1px solid var(--border-color)', animation: 'slideDown 0.3s ease' }}>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Authorize pass for {booth.name}</label>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <input 
-                                type="text" 
-                                placeholder="e.g. PASS-1001" 
-                                value={passInput}
-                                onChange={e => setPassInput(e.target.value)}
-                                style={{ 
-                                  flex: 1, padding: '12px 16px', fontSize: '1rem', 
-                                  background: 'var(--surface-color)', border: '2px solid var(--border-color)', borderRadius: '10px',
-                                  outline: 'none', textTransform: 'uppercase', letterSpacing: '1px'
-                                }}
-                                onFocus={(e) => { e.target.style.borderColor = '#3b82f6'; }}
-                                onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; }}
-                              />
-                              <button 
-                                className="btn btn-primary"
-                                style={{ padding: '0 1rem', background: '#3b82f6', border: 'none', borderRadius: '10px', boxShadow: '0 4px 15px rgba(59,130,246,0.3)' }}
-                                onClick={() => {
-                                  if (passInput) {
-                                    enableVoting(passInput);
-                                    setPassInput('');
-                                    setSelectedBooth(null);
-                                  }
-                                }}
-                              >
-                                <ChevronRight size={24} />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* ─── Floor Plan View ─── */
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <MapIcon size={18} color="#3b82f6" />
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Polling Room Layout</h3>
           </div>
-        ) : (
-          /* INTERACTIVE FLOOR PLAN VIEW */
-          <div className="glass-panel" style={{ padding: '3rem', minHeight: '600px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ position: 'relative', width: '100%', maxWidth: '900px', height: '500px', border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '16px', display: 'flex', flexWrap: 'wrap', gap: '20px', padding: '2rem', justifyContent: 'center', alignContent: 'center' }}>
-              <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#0f172a', padding: '0 10px', color: 'var(--text-secondary)', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase' }}>Polling Room Layout</div>
-              
-              {booths.map((booth, i) => {
+          <div style={{ padding: '3rem', minHeight: '450px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8fafc' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '800px', display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', alignContent: 'center' }}>
+              {booths.map((booth) => {
                 const isOffline = booth.status === 'offline';
-                const isActiveSession = activeStudent && booth.status !== 'offline' && selectedBooth !== booth.id;
+                const boothSession = getBoothSession(booth.id);
+                const hasSession = !!boothSession;
                 
-                let glowColor = isOffline ? 'transparent' : isLockdown ? 'rgba(239,68,68,0.5)' : isActiveSession ? 'rgba(245,158,11,0.5)' : 'rgba(16,185,129,0.3)';
-                let borderColor = isOffline ? 'rgba(255,255,255,0.1)' : isLockdown ? 'var(--danger)' : isActiveSession ? 'var(--warning)' : 'var(--success)';
+                const statusColor = isLockdown ? '#ef4444' : isOffline ? '#94a3b8' : hasSession ? '#f59e0b' : '#10b981';
+                const statusLabel = isLockdown ? 'LOCKED' : isOffline ? 'OFFLINE' : hasSession ? 'IN USE' : 'READY';
 
                 return (
                   <div key={booth.id} style={{
-                    width: '180px', height: '140px', background: 'rgba(30, 41, 59, 0.6)',
-                    borderRadius: '16px', border: `2px solid ${borderColor}`,
+                    width: '170px', padding: '1.5rem 1rem', background: '#fff',
+                    borderRadius: '14px', border: `2px solid ${statusColor}30`,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                    boxShadow: `0 0 30px ${glowColor}`,
-                    transition: 'all 0.4s ease',
-                    opacity: isOffline ? 0.5 : 1,
-                    position: 'relative'
-                  }}>
-                    <MonitorPlay size={32} color={isOffline ? '#64748b' : isLockdown ? 'var(--danger)' : isActiveSession ? 'var(--warning)' : 'var(--success)'} />
-                    <span style={{ color: '#fff', fontWeight: '700', fontSize: '1.1rem' }}>{booth.name}</span>
-                    <span style={{ fontSize: '0.75rem', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '20px', color: isOffline ? '#64748b' : isLockdown ? 'var(--danger)' : isActiveSession ? 'var(--warning)' : 'var(--success)', fontWeight: '600' }}>
-                      {isLockdown ? 'LOCKED' : isOffline ? 'OFFLINE' : isActiveSession ? 'IN USE' : 'READY'}
+                    boxShadow: `0 4px 16px ${statusColor}10`,
+                    transition: 'all 0.3s ease',
+                    opacity: isOffline && !isLockdown ? 0.5 : 1,
+                    cursor: 'default'
+                  }}
+                    onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${statusColor}20`; }}
+                    onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 16px ${statusColor}10`; }}
+                  >
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${statusColor}10`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <MonitorPlay size={26} color={statusColor} />
+                    </div>
+                    <span style={{ color: '#0f172a', fontWeight: 700, fontSize: '0.95rem' }}>{booth.name}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 500 }}>{booth.location}</span>
+                    <span style={{ fontSize: '0.68rem', background: `${statusColor}10`, padding: '3px 10px', borderRadius: '20px', color: statusColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', border: `1px solid ${statusColor}20`, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {!isOffline && !isLockdown && <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: statusColor, animation: 'pulse 2s infinite' }}></span>}
+                      {statusLabel}
                     </span>
                   </div>
                 );
               })}
-
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
