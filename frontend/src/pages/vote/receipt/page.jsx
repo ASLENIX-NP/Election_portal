@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useBallotContext } from '@/context/BallotContext';
 import { ShieldCheck, Copy, Home, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/common/Card';
@@ -7,6 +7,7 @@ import { Card } from '@/components/common/Card';
 export default function ReceiptPage() {
   const { receipt } = useBallotContext();
   const navigate = useNavigate();
+  const { boothId } = useParams();
   const [isGenerating, setIsGenerating] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -24,7 +25,7 @@ export default function ReceiptPage() {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <h2 style={{ color: 'var(--text-primary)' }}>No Receipt Found</h2>
-        <button className="btn btn-primary" onClick={() => navigate('/vote')}>Go Back</button>
+        <button className="btn btn-primary" onClick={() => navigate(boothId ? `/vote/${boothId}` : '/vote')}>Go Back</button>
       </div>
     );
   }
@@ -72,7 +73,7 @@ export default function ReceiptPage() {
               <button 
                 className="btn btn-primary" 
                 style={{ width: '100%', justifyContent: 'center', height: '56px', fontSize: '1.1rem', borderRadius: '12px' }}
-                onClick={() => navigate('/')}
+                onClick={() => navigate(boothId ? `/vote/${boothId}` : '/vote')}
               >
                 <Home size={20} /> Complete Session
               </button>

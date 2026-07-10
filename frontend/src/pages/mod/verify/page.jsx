@@ -1,243 +1,339 @@
 import React, { useState } from 'react';
 import { useKioskContext } from '@/context/KioskContext';
-import { UserCheck, Search, CheckCircle2, XCircle, ChevronRight, GraduationCap, Key } from 'lucide-react';
+import { UserCheck, Search, CheckCircle2, XCircle, GraduationCap, MonitorPlay, Users, ChevronRight, AlertCircle } from 'lucide-react';
 
 export default function ModVerifyPage() {
-  const { roster, enableVoting } = useKioskContext();
+  const { roster, enableVoting, booths } = useKioskContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [foundStudent, setFoundStudent] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [selectedBooth, setSelectedBooth] = useState('');
+  const [boothError, setBoothError] = useState(false);
   
   const handleSearch = (e) => {
     e.preventDefault();
     if (!searchTerm) return;
     
     setIsSearching(true);
-    setGeneratedCode(null); // Clear previous code on new search
-    // Simulate a brief network delay for premium feel
+    setIsAuthorized(false);
+    setBoothError(false);
     setTimeout(() => {
-      const student = roster.find(s => s.id.toLowerCase() === searchTerm.toLowerCase());
+      const student = roster.find(s => 
+        s.id.toLowerCase() === searchTerm.toLowerCase() ||
+        (s.name && s.name.toLowerCase() === searchTerm.toLowerCase())
+      );
       setFoundStudent(student || 'not_found');
       setIsSearching(false);
-    }, 400);
+    }, 350);
   };
 
   const handleAuthorize = () => {
-    if (foundStudent && foundStudent.status !== 'voted') {
-      const code = enableVoting(foundStudent.id);
-      setGeneratedCode(code);
+    if (!selectedBooth) {
+      setBoothError(true);
+      return;
+    }
+    if (foundStudent && foundStudent.status !== 'voted' && selectedBooth) {
+      enableVoting(foundStudent.id, selectedBooth);
+      setIsAuthorized(true);
+      setBoothError(false);
     }
   };
 
+  const selectStudent = (student) => {
+    setSearchTerm(student.id);
+    setIsAuthorized(false);
+    setBoothError(false);
+    setIsSearching(true);
+    setTimeout(() => {
+      setFoundStudent(student);
+      setIsSearching(false);
+    }, 250);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const votedCount = roster.filter(s => s.status === 'voted').length;
+  const eligibleCount = roster.filter(s => s.status === 'eligible').length;
+
   return (
-    <div className="animate-fade-in" style={{ padding: '2.5rem', maxWidth: '850px', margin: '0 auto', position: 'relative' }}>
+    <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
       
-      {/* Ambient background */}
-      <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none' }}></div>
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div className="page-header" style={{ marginBottom: '3rem', textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', padding: '12px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', borderRadius: '16px', marginBottom: '16px', boxShadow: '0 8px 25px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <UserCheck size={32} color="#8b5cf6" />
+      {/* ─── Header ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
+            <div style={{ padding: '10px', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 12px rgba(139,92,246,0.25)' }}>
+              <UserCheck size={24} color="#fff" />
+            </div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', margin: 0 }}>
+              Identity Verification
+            </h1>
           </div>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: '0 0 8px 0' }}>Identity Verification</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '500px', margin: '0 auto' }}>Search and verify student credentials before authorizing physical voting booth access.</p>
+          <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>
+            Search and verify student credentials before authorizing booth access.
+          </p>
         </div>
+        {/* Quick stats */}
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ padding: '10px 16px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: '12px', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Eligible</p>
+            <p style={{ margin: '2px 0 0', fontSize: '1.25rem', fontWeight: 800, color: '#10b981' }}>{eligibleCount}</p>
+          </div>
+          <div style={{ padding: '10px 16px', background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: '12px', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Voted</p>
+            <p style={{ margin: '2px 0 0', fontSize: '1.25rem', fontWeight: 800, color: '#3b82f6' }}>{votedCount}</p>
+          </div>
+        </div>
+      </div>
 
-          {foundStudent && (
-            <div style={{ animation: 'slideDown 0.5s ease-out', marginBottom: '3rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                <div style={{ height: '1px', flex: 1, background: 'var(--border-color)' }}></div>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selected Voter</span>
-                <div style={{ height: '1px', flex: 1, background: 'var(--border-color)' }}></div>
+      {/* ─── Search Bar ─── */}
+      <form onSubmit={handleSearch} style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            <input 
+              type="text" 
+              placeholder="Enter Voter ID (e.g. PASS-1001) or Name..."
+              value={searchTerm}
+              onChange={e => { setSearchTerm(e.target.value); setFoundStudent(null); setIsAuthorized(false); }}
+              style={{ 
+                width: '100%', padding: '14px 14px 14px 44px', 
+                background: '#fff', border: '2px solid var(--border-color)', borderRadius: '12px',
+                outline: 'none', color: '#0f172a', fontSize: '0.95rem', fontFamily: 'inherit',
+                fontWeight: 500, transition: 'border-color 0.2s ease'
+              }}
+              onFocus={(e) => { e.target.style.borderColor = '#8b5cf6'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; }}
+            />
+          </div>
+          <button 
+            type="submit" 
+            disabled={isSearching}
+            style={{ 
+              padding: '14px 28px', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', 
+              color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem',
+              cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px',
+              boxShadow: '0 4px 12px rgba(139,92,246,0.25)', transition: 'all 0.2s ease',
+              opacity: isSearching ? 0.7 : 1
+            }}
+          >
+            <Search size={18} /> {isSearching ? 'Searching...' : 'Search'}
+          </button>
+        </div>
+      </form>
+
+      {/* ─── Student Result Card ─── */}
+      {foundStudent && foundStudent !== 'not_found' && (
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', marginBottom: '1.5rem' }}>
+          
+          {/* Card Top Bar */}
+          <div style={{ height: '4px', background: foundStudent.status === 'voted' ? '#ef4444' : '#10b981' }}></div>
+          
+          <div style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+              
+              {/* Avatar */}
+              <div style={{ 
+                width: '64px', height: '64px', borderRadius: '16px', 
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 6px 16px rgba(139,92,246,0.25)', flexShrink: 0
+              }}>
+                <span style={{ fontSize: '1.5rem', color: '#fff', fontWeight: 800 }}>{foundStudent.name.charAt(0)}</span>
               </div>
 
-              {foundStudent === 'not_found' ? (
-                <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(239,68,68,0.05)', borderRadius: '16px', border: '1px dashed rgba(239,68,68,0.3)' }}>
-                  <XCircle size={48} color="var(--danger)" style={{ margin: '0 auto 16px auto', opacity: 0.8 }} />
-                  <h3 style={{ color: 'var(--danger)', margin: '0 0 8px 0', fontSize: '1.35rem' }}>Credential Not Found</h3>
-                  <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No record matches the provided Voting Pass. Please check for typos.</p>
-                </div>
-              ) : (
-                /* Premium Digital ID Card */
-                <div style={{ 
-                  background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', 
-                  borderRadius: '20px', 
-                  border: '1px solid rgba(0,0,0,0.05)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.08), inset 0 2px 0 rgba(255,255,255,1)',
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}>
-                  {/* Card Header Pattern */}
-                  <div style={{ height: '80px', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', right: '-10%', top: '-50%', width: '150px', height: '150px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
-                    <div style={{ position: 'absolute', right: '5%', top: '-20%', width: '100px', height: '100px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
+              {/* Info */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>{foundStudent.name}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b' }}>
+                      <GraduationCap size={15} />
+                      <span style={{ fontSize: '0.88rem', fontWeight: 500 }}>{foundStudent.grade}</span>
+                      <span style={{ opacity: 0.4 }}>•</span>
+                      <span style={{ fontSize: '0.88rem', fontWeight: 600, fontFamily: 'monospace', color: '#8b5cf6' }}>{foundStudent.id}</span>
+                    </div>
                   </div>
+                  {/* Status Badge */}
+                  {foundStudent.status === 'voted' ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                      <CheckCircle2 size={13} /> Voted
+                    </span>
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', background: 'rgba(16,185,129,0.08)', color: '#10b981', border: '1px solid rgba(16,185,129,0.15)', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }}></span> Eligible
+                    </span>
+                  )}
+                </div>
 
-                  <div style={{ padding: '0 2rem 2rem 2rem', position: 'relative' }}>
-                    {/* Floating Avatar Placeholder */}
-                    <div style={{ 
-                      width: '80px', height: '80px', borderRadius: '20px', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', 
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      position: 'absolute', top: '-40px', left: '2rem',
-                      boxShadow: '0 10px 25px rgba(139,92,246,0.3)', border: '4px solid #fff'
-                    }}>
-                      <span style={{ fontSize: '2rem', color: '#fff', fontWeight: '800' }}>{foundStudent.name.charAt(0)}</span>
+                {/* Status Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1rem' }}>
+                  <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Voting Status</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+                      {foundStudent.status === 'voted' ? 'Already Voted' : 'Eligible to Vote'}
+                    </p>
+                  </div>
+                  <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Clearance</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.95rem', fontWeight: 700, color: foundStudent.status === 'voted' ? '#ef4444' : '#10b981' }}>
+                      {foundStudent.status === 'voted' ? 'DENIED' : 'APPROVED'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Authorization Section */}
+                {isAuthorized ? (
+                  <div style={{ padding: '14px', background: 'rgba(16,185,129,0.06)', borderRadius: '12px', border: '1px solid rgba(16,185,129,0.15)', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px', color: '#10b981' }}>
+                      <CheckCircle2 size={18} />
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Terminal Access Granted</span>
                     </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: '56px', marginBottom: '2rem' }}>
-                      <div>
-                        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>{foundStudent.name}</h2>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
-                          <GraduationCap size={16} />
-                          <span style={{ fontSize: '0.95rem', fontWeight: '500' }}>{foundStudent.grade}</span>
-                          <span style={{ opacity: 0.5 }}>•</span>
-                          <span style={{ fontSize: '0.95rem', fontWeight: '500', fontFamily: 'monospace' }}>{foundStudent.id}</span>
-                        </div>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.88rem' }}>
+                      <strong>{foundStudent.name}</strong> may now proceed to the terminal.
+                    </p>
+                  </div>
+                ) : foundStudent.status !== 'voted' ? (
+                  <div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <MonitorPlay size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <select 
+                          value={selectedBooth} 
+                          onChange={(e) => { setSelectedBooth(e.target.value); setBoothError(false); }}
+                          style={{ 
+                            width: '100%', padding: '12px 12px 12px 36px', borderRadius: '10px', 
+                            background: '#fff', color: '#0f172a', 
+                            border: boothError ? '2px solid #ef4444' : '1px solid var(--border-color)', 
+                            outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit', fontWeight: 500,
+                            appearance: 'none', cursor: 'pointer', transition: 'border-color 0.2s ease'
+                          }}
+                        >
+                          <option value="">Select Terminal...</option>
+                          {booths.filter(b => b.status !== 'offline').map(b => (
+                            <option key={b.id} value={b.id}>{b.name} — {b.location}</option>
+                          ))}
+                        </select>
+                        {boothError && (
+                          <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <AlertCircle size={13} /> Please select a terminal first
+                          </p>
+                        )}
                       </div>
-                      
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(16,185,129,0.1)', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.2)' }}>
-                          <div className="pulse-dot"></div>
-                          <span style={{ color: 'var(--success)', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase' }}>Verified</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ background: 'rgba(0,0,0,0.02)', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', border: '1px solid var(--border-color)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <p style={{ margin: '0 0 6px 0', fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>Voting Status</p>
-                          {foundStudent.status === 'voted' ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <CheckCircle2 color="var(--success)" size={20} />
-                              <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Already Voted</span>
-                            </div>
-                          ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', border: '2px solid var(--accent)' }}></div>
-                              <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Eligible to Vote</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div style={{ textAlign: 'right' }}>
-                           <p style={{ margin: '0 0 6px 0', fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>Clearance</p>
-                           <span style={{ fontSize: '1.1rem', fontWeight: '700', color: foundStudent.status === 'voted' ? 'var(--danger)' : 'var(--success)' }}>
-                             {foundStudent.status === 'voted' ? 'DENIED' : 'APPROVED'}
-                           </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {generatedCode ? (
-                      <div style={{ padding: '16px', background: 'rgba(16,185,129,0.1)', borderRadius: '14px', border: '1px solid rgba(16,185,129,0.3)', textAlign: 'center', animation: 'fadeIn 0.5s' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', color: 'var(--success)' }}>
-                          <Key size={18} />
-                          <span style={{ fontWeight: '600', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Access Code for {foundStudent.name}</span>
-                        </div>
-                        <h1 style={{ margin: 0, fontSize: '3rem', fontWeight: '800', letterSpacing: '8px', color: 'var(--text-primary)', fontFamily: 'monospace' }}>{generatedCode}</h1>
-                        <p style={{ margin: '8px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Provide this one-time code to {foundStudent.name} to unlock their terminal.</p>
-                      </div>
-                    ) : (
                       <button
-                        className="btn"
-                        disabled={foundStudent.status === 'voted'}
                         onClick={handleAuthorize}
                         style={{
-                          width: "100%", justifyContent: "center", padding: '16px', fontSize: '1.1rem', fontWeight: '700',
-                          background: foundStudent.status === 'voted' ? 'rgba(0,0,0,0.05)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                          color: foundStudent.status === 'voted' ? 'var(--text-secondary)' : '#fff',
-                          border: 'none', borderRadius: '14px',
-                          boxShadow: foundStudent.status === 'voted' ? 'none' : '0 8px 20px rgba(16,185,129,0.3)',
-                          transition: 'all 0.3s ease'
+                          padding: '12px 24px', fontSize: '0.9rem', fontWeight: 700,
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          color: '#fff', border: 'none', borderRadius: '10px',
+                          boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                          cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px',
+                          transition: 'all 0.2s ease', whiteSpace: 'nowrap'
                         }}
                       >
-                        {foundStudent.status === 'voted' ? 'Voting Session Completed' : 'Authorize Terminal Access'}
+                        <CheckCircle2 size={18} /> Authorize
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div style={{ padding: '12px', background: 'rgba(239,68,68,0.05)', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.12)', textAlign: 'center' }}>
+                    <p style={{ margin: 0, color: '#ef4444', fontSize: '0.88rem', fontWeight: 600 }}>This voter has already completed their voting session.</p>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-        {/* Voter Directory Section */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <UserCheck size={24} color="var(--accent-cyan)" />
-              Voter Directory
-            </h2>
-            <div style={{ position: 'relative', width: '300px' }}>
-              <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-              <input 
-                type="text" 
-                placeholder="Search by name or ID..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                style={{ width: '100%', padding: '10px 10px 10px 40px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '10px', outline: 'none', color: 'var(--text-primary)', fontSize: '0.95rem' }}
-              />
-            </div>
+      {/* Not Found */}
+      {foundStudent === 'not_found' && (
+        <div style={{ padding: '2.5rem', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '1px dashed rgba(239,68,68,0.25)', marginBottom: '1.5rem' }}>
+          <XCircle size={40} color="#ef4444" style={{ margin: '0 auto 12px auto', opacity: 0.7 }} />
+          <h3 style={{ color: '#ef4444', margin: '0 0 6px 0', fontSize: '1.15rem', fontWeight: 700 }}>No Record Found</h3>
+          <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>No student matches "<strong>{searchTerm}</strong>". Check for typos and try again.</p>
+        </div>
+      )}
+
+      {/* ─── Voter Directory ─── */}
+      <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Users size={18} color="#06b6d4" /> Voter Directory
+          </h3>
+          <div style={{ position: 'relative', width: '260px' }}>
+            <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            <input 
+              type="text" 
+              placeholder="Filter by name or ID..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ width: '100%', padding: '8px 8px 8px 34px', background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '8px', outline: 'none', color: '#0f172a', fontSize: '0.85rem', fontFamily: 'inherit' }}
+            />
           </div>
-          <div className="glass-panel" style={{ padding: '2rem', borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}>
-            <div className="data-table-wrapper" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: '600' }}>Voter ID</th>
-                    <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: '600' }}>Name</th>
-                    <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: '600' }}>Grade</th>
-                    <th style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: '600' }}>Status</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: '600' }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {roster.filter(s => 
-                    !searchTerm || 
-                    s.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                    (s.name && s.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                  ).map(student => (
-                    <tr key={student.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }}>
-                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: 'var(--accent-cyan)' }}>{student.id}</td>
-                      <td style={{ padding: '12px 16px', fontWeight: '500', color: 'var(--text-primary)' }}>{student.name}</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>{student.grade}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        {student.status === 'voted' ? (
-                          <span style={{ display: 'inline-block', padding: '4px 10px', background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '600' }}>Voted</span>
-                        ) : (
-                          <span style={{ display: 'inline-block', padding: '4px 10px', background: 'rgba(16,185,129,0.1)', color: 'var(--success)', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '600' }}>Eligible</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        <button 
-                          onClick={() => {
-                            setSearchTerm(student.id);
-                            // Simulate quick search
-                            setIsSearching(true);
-                            setTimeout(() => {
-                              setFoundStudent(student);
-                              setIsSearching(false);
-                            }, 300);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
-                        >
-                          Verify
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {roster.length === 0 && (
-                    <tr>
-                      <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No voters found in directory.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        </div>
+        
+        <div style={{ maxHeight: '420px', overflowY: 'auto' }}>
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc' }}>
+                <th style={{ padding: '10px 16px', color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border-color)' }}>Voter ID</th>
+                <th style={{ padding: '10px 16px', color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border-color)' }}>Name</th>
+                <th style={{ padding: '10px 16px', color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border-color)' }}>Grade</th>
+                <th style={{ padding: '10px 16px', color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border-color)' }}>Status</th>
+                <th style={{ padding: '10px 16px', textAlign: 'right', color: '#94a3b8', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border-color)' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roster.filter(s => 
+                !searchTerm || 
+                s.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                (s.name && s.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              ).map(student => (
+                <tr 
+                  key={student.id} 
+                  style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s ease', cursor: 'pointer' }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <td style={{ padding: '10px 16px', fontFamily: 'monospace', color: '#8b5cf6', fontSize: '0.88rem', fontWeight: 600 }}>{student.id}</td>
+                  <td style={{ padding: '10px 16px', fontWeight: 600, color: '#0f172a', fontSize: '0.9rem' }}>{student.name}</td>
+                  <td style={{ padding: '10px 16px', color: '#64748b', fontSize: '0.88rem' }}>{student.grade}</td>
+                  <td style={{ padding: '10px 16px' }}>
+                    {student.status === 'voted' ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', background: 'rgba(239,68,68,0.07)', color: '#ef4444', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                        <CheckCircle2 size={12} /> Voted
+                      </span>
+                    ) : (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', background: 'rgba(16,185,129,0.07)', color: '#10b981', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }}></span> Eligible
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                    <button 
+                      onClick={() => selectStudent(student)}
+                      style={{ 
+                        background: '#f8fafc', border: '1px solid var(--border-color)', color: '#0f172a', 
+                        padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem',
+                        fontWeight: 600, fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '5px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = '#8b5cf6'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#8b5cf6'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#0f172a'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                    >
+                      Verify <ChevronRight size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {roster.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No voters found in directory.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
