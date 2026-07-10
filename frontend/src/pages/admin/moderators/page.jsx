@@ -1,0 +1,361 @@
+import { useState, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { Card } from '@/components/common/Card';
+import { Plus, Edit2, Trash2, X, Image as ImageIcon, ShieldCheck, Shield, Search, ChevronLeft, ChevronRight, CheckSquare, Square } from 'lucide-react';
+import { useElection } from '@/context/ElectionContext';
+
+export default function ManageModerators() {
+  const { moderators, addModerator, updateModerator, deleteModerator } = useElection();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentMod, setCurrentMod] = useState({ id: null, name: '', email: '', role: 'Station Monitor', photoUrl: '' });
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  
+  // Table State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('name');
+  const [sortDir, setSortDir] = useState('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMods, setSelectedMods] = useState(new Set());
+  const itemsPerPage = 10;
+
+  const fileInputRef = useRef(null);
+
+  const openAddModal = () => {
+    setIsEditing(false);
+    setCurrentMod({ id: null, name: '', email: '', role: 'Station Monitor', photoUrl: '' });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (mod) => {
+    setIsEditing(true);
+    setCurrentMod(mod);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveMod = (e) => {
+    e.preventDefault();
+    if (!currentMod.name || !currentMod.email) return;
+
+    if (isEditing) {
+      updateModerator(currentMod.id, currentMod);
+    } else {
+      addModerator(currentMod);
+    }
+    
+    setIsModalOpen(false);
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCurrentMod({ ...currentMod, photoUrl: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if(selectedMods.size === 0) return;
+    if(window.confirm(`Are you sure you want to remove ${selectedMods.size} moderators?`)) {
+      selectedMods.forEach(id => deleteModerator(id));
+      setSelectedMods(new Set());
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedMods.size === currentItems.length && currentItems.length > 0) {
+      setSelectedMods(new Set());
+    } else {
+      setSelectedMods(new Set(currentItems.map(m => m.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedMods(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    let result = moderators;
+    
+    // Search
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(m => 
+        (m.name && m.name.toLowerCase().includes(lower)) || 
+        (m.email && m.email.toLowerCase().includes(lower)) ||
+        (m.role && m.role.toLowerCase().includes(lower))
+      );
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      const valA = a[sortField] || '';
+      const valB = b[sortField] || '';
+      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [moderators, searchTerm, sortField, sortDir]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage);
+  const currentItems = filteredAndSorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return null;
+    return <span style={{ fontSize: '0.7rem', marginLeft: '4px' }}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header authentic-header">
+        <div>
+          <div className="header-title-row">
+            <h1>Manage Moderators</h1>
+          </div>
+          <p className="header-subtitle">Add, edit, or remove election moderators and staff.</p>
+        </div>
+        <button className="btn btn-primary" onClick={openAddModal} style={{ background: 'var(--text-primary)', color: 'var(--bg-color)' }}>
+          <Plus size={18} />
+          Add Moderator
+        </button>
+      </div>
+
+      <div className="dashboard-grid" style={{ marginBottom: '2rem' }}>
+        <Card className="stat-card authentic-card">
+          <div className="stat-content">
+            <div className="stat-header">
+              <h3 className="stat-title">Total Staff</h3>
+              <div className="stat-icon-wrapper" style={{ background: 'rgba(139, 92, 246, 0.1)', color: 'var(--accent-purple)' }}>
+                <Shield size={22} />
+              </div>
+            </div>
+            <div className="stat-value">{moderators.length}</div>
+          </div>
+        </Card>
+      </div>
+
+      <Card style={{ padding: 0, overflow: 'hidden' }}>
+        {/* Toolbar */}
+        <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color)' }}>
+          <div className="form-control" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '320px', background: 'var(--surface-hover)', borderRadius: '8px', padding: '10px 16px' }}>
+            <Search size={18} color="var(--text-secondary)" />
+            <input 
+              type="text" 
+              placeholder="Search by name, email, or role..." 
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '100%' }} 
+            />
+          </div>
+
+          {selectedMods.size > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                <strong>{selectedMods.size}</strong> selected
+              </span>
+              <button className="btn btn-danger" onClick={handleBulkDelete} style={{ padding: '8px 16px' }}>
+                <Trash2 size={16} /> Bulk Delete
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Data Table */}
+        <div className="data-table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: '40px' }} onClick={toggleSelectAll}>
+                  {selectedMods.size === currentItems.length && currentItems.length > 0 ? <CheckSquare size={18} /> : <Square size={18} />}
+                </th>
+                <th>Profile</th>
+                <th onClick={() => handleSort('name')}>Name <SortIcon field="name" /></th>
+                <th onClick={() => handleSort('email')}>Email <SortIcon field="email" /></th>
+                <th onClick={() => handleSort('role')}>Role <SortIcon field="role" /></th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No moderators found matching your criteria.</td>
+                </tr>
+              ) : currentItems.map(m => (
+                <tr key={m.id} className={selectedMods.has(m.id) ? 'selected' : ''}>
+                  <td onClick={() => toggleSelect(m.id)} style={{ cursor: 'pointer' }}>
+                    {selectedMods.has(m.id) ? <CheckSquare size={18} color="var(--accent)" /> : <Square size={18} color="var(--text-muted)" />}
+                  </td>
+                  <td>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: m.photoUrl ? 'transparent' : 'var(--surface-hover)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {m.photoUrl ? (
+                        <img src={m.photoUrl} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: m.color || 'var(--text-primary)' }}>{m.avatar || m.name.charAt(0)}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{ fontWeight: 600 }}>{m.name}</td>
+                  <td>{m.email}</td>
+                  <td>
+                    <span className="badge" style={{ background: 'rgba(139, 92, 246, 0.1)', color: 'var(--accent-purple)' }}>{m.role}</span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <button className="btn" style={{ padding: '6px', background: 'transparent', color: 'var(--text-primary)' }} onClick={() => openEditModal(m)} title="Edit">
+                        <Edit2 size={16} />
+                      </button>
+                      <button className="btn" style={{ padding: '6px', background: 'transparent', color: 'var(--danger)' }} onClick={() => setConfirmDeleteId(m.id)} title="Remove">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Showing {filteredAndSorted.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSorted.length)} of {filteredAndSorted.length} staff
+          </span>
+          
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              className="btn btn-secondary" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              style={{ padding: '6px 12px' }}
+            >
+              <ChevronLeft size={16} /> Prev
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(p => p + 1)}
+              style={{ padding: '6px 12px' }}
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </Card>
+
+      {isModalOpen && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Card className="authentic-card" style={{ width: '480px', padding: '2rem', animation: 'fadeIn 0.2s ease-out' }}>
+            <div className="flex-between mb-6">
+              <h3 className="card-title" style={{ marginBottom: 0 }}>{isEditing ? 'Edit Moderator' : 'Add Moderator'}</h3>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveMod}>
+              {/* Photo Upload Section */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--surface-hover)', border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  {currentMod.photoUrl ? (
+                    <img src={currentMod.photoUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <ImageIcon size={24} style={{ color: 'var(--text-secondary)', opacity: 0.5 }} />
+                  )}
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>Profile Photo</h4>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Upload a square image, max 2MB.</p>
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                  <button type="button" className="btn btn-secondary text-sm" style={{ padding: '0.4rem 0.75rem' }} onClick={() => fileInputRef.current?.click()}>
+                    Choose Image
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Full Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="e.g. Mrs. Davis"
+                  value={currentMod.name}
+                  onChange={e => setCurrentMod({...currentMod, name: e.target.value})}
+                  required 
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email Address</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  placeholder="e.g. staff@school.edu"
+                  value={currentMod.email}
+                  onChange={e => setCurrentMod({...currentMod, email: e.target.value})}
+                  required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Staff Role</label>
+                <select 
+                  className="form-control"
+                  value={currentMod.role}
+                  onChange={e => setCurrentMod({...currentMod, role: e.target.value})}
+                  required
+                >
+                  <option value="Station Monitor">Station Monitor</option>
+                  <option value="Chief Moderator">Chief Moderator</option>
+                  <option value="IT Support">IT Support</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 justify-end mt-6">
+                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={!currentMod.name || !currentMod.email}>
+                  {isEditing ? 'Save Changes' : 'Add Moderator'}
+                </button>
+              </div>
+            </form>
+          </Card>
+        </div>,
+        document.body
+      )}
+
+      {confirmDeleteId && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Card className="authentic-card" style={{ width: '380px', padding: '2rem', animation: 'fadeIn 0.2s ease-out' }}>
+            <h3 className="card-title mb-2" style={{ color: 'var(--danger)' }}>Remove Moderator</h3>
+            <p className="text-secondary mb-6 text-sm">Are you sure you want to remove this moderator? Their access will be revoked immediately.</p>
+            <div className="flex gap-3 justify-end">
+              <button className="btn btn-secondary" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+              <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => { deleteModerator(confirmDeleteId); setConfirmDeleteId(null); }}>Yes, Remove</button>
+            </div>
+          </Card>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}

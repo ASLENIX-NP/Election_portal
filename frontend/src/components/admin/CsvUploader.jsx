@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
-import { useElection } from '../../context/ElectionContext';
+import { useElection } from '@/context/ElectionContext';
 
 export default function CsvUploader({ onComplete }) {
   const { processCsvData, resetData } = useElection();
