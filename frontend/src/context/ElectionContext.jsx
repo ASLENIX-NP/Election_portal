@@ -8,20 +8,20 @@ export function ElectionProvider({ children }) {
   const [status, setStatus] = useState('Active');
   
   // Dashboard Live State
-  const [totalVotes, setTotalVotes] = useState(1250);
-  const [totalEligible, setTotalEligible] = useState(2000);
+  const [totalVotes, setTotalVotes] = useState(0);
+  const [totalEligible, setTotalEligible] = useState(50); // Set to 50 to match the generated mockRoster
   
   const [candidates, setCandidates] = useState([
-    { id: 1, name: 'John Doe', position: 'President', votes: 600, color: '#3b82f6', avatar: 'JD' },
-    { id: 2, name: 'Jane Smith', position: 'President', votes: 500, color: '#8b5cf6', avatar: 'JS' },
-    { id: 11, name: 'Michael Chen', position: 'President', votes: 150, color: '#10b981', avatar: 'MC' },
-    { id: 3, name: 'Alice W.', position: 'Vice President', votes: 750, color: '#06b6d4', avatar: 'AW' },
-    { id: 4, name: 'Bob M.', position: 'Vice President', votes: 500, color: '#f59e0b', avatar: 'BM' },
-    { id: 5, name: 'Emma Watson', position: 'Student Council Representatives', votes: 980, color: '#ec4899', avatar: 'EW' },
-    { id: 6, name: 'LeBron James', position: 'Student Council Representatives', votes: 850, color: '#f43f5e', avatar: 'LJ' },
-    { id: 7, name: 'Serena W.', position: 'Student Council Representatives', votes: 720, color: '#8b5cf6', avatar: 'SW' },
-    { id: 8, name: 'Tom Holland', position: 'Student Council Representatives', votes: 610, color: '#3b82f6', avatar: 'TH' },
-    { id: 9, name: 'Zendaya', position: 'Student Council Representatives', votes: 890, color: '#10b981', avatar: 'Z' }
+    { id: 1, name: 'John Doe', position: 'President', votes: 0, color: '#3b82f6', avatar: 'JD' },
+    { id: 2, name: 'Jane Smith', position: 'President', votes: 0, color: '#8b5cf6', avatar: 'JS' },
+    { id: 11, name: 'Michael Chen', position: 'President', votes: 0, color: '#10b981', avatar: 'MC' },
+    { id: 3, name: 'Alice W.', position: 'Vice President', votes: 0, color: '#06b6d4', avatar: 'AW' },
+    { id: 4, name: 'Bob M.', position: 'Vice President', votes: 0, color: '#f59e0b', avatar: 'BM' },
+    { id: 5, name: 'Emma Watson', position: 'Student Council Representatives', votes: 0, color: '#ec4899', avatar: 'EW' },
+    { id: 6, name: 'LeBron James', position: 'Student Council Representatives', votes: 0, color: '#f43f5e', avatar: 'LJ' },
+    { id: 7, name: 'Serena W.', position: 'Student Council Representatives', votes: 0, color: '#8b5cf6', avatar: 'SW' },
+    { id: 8, name: 'Tom Holland', position: 'Student Council Representatives', votes: 0, color: '#3b82f6', avatar: 'TH' },
+    { id: 9, name: 'Zendaya', position: 'Student Council Representatives', votes: 0, color: '#10b981', avatar: 'Z' }
   ]);
 
   const [positions, setPositions] = useState([
@@ -30,29 +30,17 @@ export function ElectionProvider({ children }) {
     { id: 3, title: 'Student Council Representatives', maxVotes: 4 },
   ]);
 
-  const [trendData, setTrendData] = useState([
-    { time: '08:00', votes: 45 },
-    { time: '09:00', votes: 120 },
-    { time: '10:00', votes: 230 },
-    { time: '11:00', votes: 450 },
-    { time: '12:00', votes: 780 },
-    { time: '13:00', votes: 1050 },
-    { time: '14:00', votes: 1250 },
-  ]);
+  const [trendData, setTrendData] = useState([]);
 
   const [demoData, setDemoData] = useState([
-    { name: 'Grade 9', value: 250 },
-    { name: 'Grade 10', value: 300 },
-    { name: 'Grade 11', value: 320 },
-    { name: 'Grade 12', value: 380 },
+    { name: 'Grade 9', value: 0 },
+    { name: 'Grade 10', value: 0 },
+    { name: 'Grade 11', value: 0 },
+    { name: 'Grade 12', value: 0 },
   ]);
 
   const [recentActivity, setRecentActivity] = useState([
-    { id: 1, type: 'vote', message: 'Vote cast in Grade 12 sector', time: 'Just now', hash: '0x7f8a...3b21' },
-    { id: 5, type: 'vote', message: 'Vote cast in Grade 10 sector', time: '1 min ago', hash: '0x1c4d...8a92' },
-    { id: 2, type: 'system', message: 'System health check passed', time: '2 mins ago', hash: 'sys_ok_091' },
-    { id: 3, type: 'vote', message: 'Vote cast in Grade 11 sector', time: '5 mins ago', hash: '0x9a12...ff90' },
-    { id: 4, type: 'alert', message: 'Failed login attempt (IP: 192.168.1.4)', time: '12 mins ago', hash: 'sec_warn_11' },
+    { id: 1, type: 'system', message: 'System initialized successfully', time: 'Just now', hash: 'sys_init_001' }
   ]);
 
   useEffect(() => {

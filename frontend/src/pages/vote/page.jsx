@@ -7,21 +7,33 @@ import { useKioskContext } from '@/context/KioskContext';
 export default function VoteLogin() {
   const navigate = useNavigate();
   const { boothId } = useParams();
-  const { authenticateVoter } = useKioskContext();
-  const [code, setCode] = useState('');
+  const { authenticateVoter, activeStudent } = useKioskContext();
   const [error, setError] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  React.useEffect(() => {
+    const checkAuth = () => {
+      setIsAuthorized(!!localStorage.getItem(`activeStudent_${boothId}`));
+    };
+    checkAuth();
+    
+    // Check periodically in case localStorage events don't fire properly or for same-browser testing
+    const interval = setInterval(checkAuth, 1000);
+    window.addEventListener('storage', checkAuth);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, [boothId]);
 
   const handleStart = (e) => {
     e.preventDefault();
-    if (!code) {
-      setError('Please enter the 6-digit voting code.');
-      return;
-    }
     
-    if (authenticateVoter(code)) {
+    if (authenticateVoter(boothId)) {
       navigate(`/vote/${boothId}/ballot`);
     } else {
-      setError('Invalid or expired voting code. Please verify with the moderator.');
+      setError('Session not authorized. Please verify with the moderator.');
     }
   };
 
@@ -56,38 +68,12 @@ export default function VoteLogin() {
         <div style={{ animation: 'fadeUp 0.8s ease-out 0.2s backwards' }}>
           <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: '24px', background: 'rgba(255,255,255,0.7)', border: '1px solid var(--border-color)', boxShadow: '0 20px 40px rgba(0,0,0,0.05)', backdropFilter: 'blur(20px)' }}>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: 1.5 }}>Enter the 6-digit secure voting code<br/>provided by the moderator.</p>
+              <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: 1.5 }}>
+                {isAuthorized ? 'Your session has been authorized. You may now proceed.' : 'Please wait for the moderator to authorize your session.'}
+              </p>
               
               <form onSubmit={handleStart}>
-                <div className="input-group" style={{ marginBottom: '2rem', position: 'relative' }}>
-                  <KeyRound size={24} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', transition: 'color 0.3s ease' }} id="key-icon" />
-                  <input 
-                    type="text" 
-                    placeholder="E.G. A4X9B2" 
-                    className="form-control"
-                    value={code}
-                    onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(''); }}
-                    style={{ 
-                      width: '100%', padding: '20px 20px 20px 60px', fontSize: '1.75rem', 
-                      background: 'rgba(0,0,0,0.03)', border: '2px solid var(--border-color)', borderRadius: '16px',
-                      outline: 'none', letterSpacing: '6px', textAlign: 'center', textTransform: 'uppercase',
-                      color: 'var(--text-primary)', fontWeight: '800', transition: 'all 0.3s ease',
-                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-                    }}
-                    maxLength={6}
-                    onFocus={(e) => { 
-                      e.target.style.borderColor = '#10b981'; 
-                      e.target.style.boxShadow = '0 0 0 4px rgba(16,185,129,0.15), inset 0 2px 4px rgba(0,0,0,0.02)'; 
-                      e.target.style.background = '#ffffff';
-                      document.getElementById('key-icon').style.color = '#10b981';
-                    }}
-                    onBlur={(e) => { 
-                      e.target.style.borderColor = 'var(--border-color)'; 
-                      e.target.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.02)'; 
-                      e.target.style.background = 'rgba(0,0,0,0.03)';
-                      document.getElementById('key-icon').style.color = '#64748b';
-                    }}
-                  />
+                <div style={{ marginBottom: '2rem' }}>
                   {error && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', fontSize: '0.9rem', marginTop: '16px', justifyContent: 'center', fontWeight: 600, background: 'rgba(239,68,68,0.1)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)', animation: 'slideDown 0.3s ease-out' }}>
                       <AlertCircle size={16} /> {error}

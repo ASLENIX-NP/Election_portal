@@ -3,11 +3,12 @@ import { RefreshCcw, Search, CheckCircle, ShieldAlert, FileKey } from 'lucide-re
 import { useKioskContext } from '@/context/KioskContext';
 
 export default function ModResetPage() {
-  const { roster, logAction, isLockdown } = useKioskContext();
+  const { roster, logAction, isLockdown, enableVoting, booths } = useKioskContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [error, setError] = useState('');
   const [generatedPass, setGeneratedPass] = useState('');
+  const [selectedBooth, setSelectedBooth] = useState('');
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -37,10 +38,14 @@ export default function ModResetPage() {
       setError('Student has already voted. Override passes cannot be issued.');
       return;
     }
+    if (!selectedBooth) {
+      alert("Please select a terminal.");
+      return;
+    }
 
-    const overrideCode = `OVR-${Math.floor(1000 + Math.random() * 9000)}`;
-    setGeneratedPass(overrideCode);
-    logAction('warning', `Generated Override Pass [${overrideCode}] for student ${searchResult.name} (${searchResult.id})`, 'Moderator');
+    enableVoting(searchResult.id, selectedBooth);
+    setGeneratedPass('AUTHORIZED');
+    logAction('warning', `Issued Terminal Override for student ${searchResult.name} (${searchResult.id})`, 'Moderator');
   };
 
   return (
@@ -115,22 +120,34 @@ export default function ModResetPage() {
             </div>
 
             {!generatedPass ? (
-              <button 
-                onClick={handleIssueOverride} 
-                className="btn" 
-                style={{ width: '100%', background: 'rgba(245,158,11,0.1)', color: 'var(--warning)', borderColor: 'rgba(245,158,11,0.3)', padding: '12px' }}
-                disabled={searchResult.status === 'voted'}
-              >
-                <FileKey size={20} /> Issue Temporary Override Pass
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <select 
+                  value={selectedBooth} 
+                  onChange={(e) => setSelectedBooth(e.target.value)}
+                  style={{ padding: '12px', borderRadius: '8px', background: 'var(--surface-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', flex: 1 }}
+                >
+                  <option value="">Select Terminal...</option>
+                  {booths && booths.map(b => (
+                    <option key={b.id} value={b.id}>{b.name} ({b.location})</option>
+                  ))}
+                </select>
+                <button 
+                  onClick={handleIssueOverride} 
+                  className="btn" 
+                  style={{ flex: 2, background: 'rgba(245,158,11,0.1)', color: 'var(--warning)', borderColor: 'rgba(245,158,11,0.3)', padding: '12px' }}
+                  disabled={searchResult.status === 'voted' || !selectedBooth}
+                >
+                  <FileKey size={20} /> Authorize Terminal Override
+                </button>
+              </div>
             ) : (
               <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                 <CheckCircle size={32} color="var(--success)" style={{ margin: '0 auto 10px auto' }} />
-                <h3 style={{ color: 'var(--success)', margin: '0 0 10px 0', fontSize: '1.1rem' }}>Override Pass Generated</h3>
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', fontSize: '2rem', fontWeight: '800', letterSpacing: '2px', color: '#fff', userSelect: 'all' }}>
-                  {generatedPass}
+                <h3 style={{ color: 'var(--success)', margin: '0 0 10px 0', fontSize: '1.1rem' }}>Override Authorized</h3>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', fontSize: '1.5rem', fontWeight: '800', letterSpacing: '2px', color: '#fff', userSelect: 'all' }}>
+                  ACCESS GRANTED
                 </div>
-                <p style={{ margin: '10px 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Instruct the voter to use this code at the terminal.</p>
+                <p style={{ margin: '10px 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>The voter may now proceed to the terminal.</p>
               </div>
             )}
           </div>

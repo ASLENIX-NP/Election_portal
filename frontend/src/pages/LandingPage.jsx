@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, User, Lock, EyeOff, Eye, LogIn, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '@/context/AuthContext';
+import { useKioskContext } from '@/context/KioskContext';
 import '@/pages/home.css';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { login } = useAuthContext();
+  const { booths } = useKioskContext();
   
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedBooth, setSelectedBooth] = useState(booths[0]?.id || 'booth-01');
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -28,7 +31,7 @@ export default function LandingPage() {
         navigate('/mod');
       } else if (username === 'voter' && password === 'voter123') {
         login({ role: 'voter', name: 'Student Voter', email: username });
-        navigate('/vote/booth-01');
+        navigate(`/vote/${selectedBooth}`);
       } else {
         setError('Invalid username or password.');
         setIsLoading(false);
@@ -109,15 +112,28 @@ export default function LandingPage() {
           <span>OR</span>
         </div>
 
-        <button 
-          className="secondary-btn launch-terminal-btn"
-          onClick={() => navigate('/vote/booth-01')}
-          type="button"
-        >
-          <Shield size={18} className="btn-icon" />
-          <span>Launch Voting Terminal</span>
-          <ArrowRight size={18} className="btn-icon-right" />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <select 
+            value={selectedBooth} 
+            onChange={(e) => setSelectedBooth(e.target.value)}
+            className="premium-input"
+            style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', width: '100%', appearance: 'none', cursor: 'pointer' }}
+          >
+            {booths && booths.map(b => (
+              <option key={b.id} value={b.id}>{b.name} ({b.location})</option>
+            ))}
+          </select>
+
+          <button 
+            className="secondary-btn launch-terminal-btn"
+            onClick={() => navigate(`/vote/${selectedBooth}`)}
+            type="button"
+          >
+            <Shield size={18} className="btn-icon" />
+            <span>Launch Voting Terminal</span>
+            <ArrowRight size={18} className="btn-icon-right" />
+          </button>
+        </div>
 
       </div>
 

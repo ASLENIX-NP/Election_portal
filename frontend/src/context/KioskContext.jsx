@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 
 const KioskContext = createContext();
 
 export function KioskProvider({ children }) {
   const [activeStudent, setActiveStudent] = useState(null); // The student enabled for voting
-  const [activePasscode, setActivePasscode] = useState(null); // The one-time 6-digit code
   const [kioskStatus, setKioskStatus] = useState('idle'); // 'idle', 'voting', 'completed'
   
   // Advanced Mod Features
@@ -48,11 +47,35 @@ export function KioskProvider({ children }) {
       id: `PASS-${i}`,
       name: `${firstNames[i%firstNames.length]} ${lastNames[i%lastNames.length]}`,
       grade: grades[i%grades.length],
-      status: i % 3 === 0 ? 'voted' : 'eligible' // 33% voted
+      status: 'eligible'
     });
   }
 
-  const [roster, setRoster] = useState(mockRoster);
+  const getInitialRoster = () => {
+    const stored = localStorage.getItem('electionRoster');
+    if (stored) {
+      try { return JSON.parse(stored); } catch (e) { }
+    }
+    return mockRoster;
+  };
+
+  const [roster, setRoster] = useState(getInitialRoster);
+
+  useEffect(() => {
+    localStorage.setItem('electionRoster', JSON.stringify(roster));
+  }, [roster]);
+
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'electionRoster' && e.newValue) {
+        try {
+          setRoster(JSON.parse(e.newValue));
+        } catch(err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const addBooth = (newBooth) => {
     setBooths([...booths, { ...newBooth, id: `booth-${Date.now()}`, status: 'offline' }]);
@@ -72,49 +95,21 @@ export function KioskProvider({ children }) {
     logAction('info', `Terminal ${booth?.name} status changed to ${newStatus}`, 'Moderator');
   };
 
-  const enableVoting = (studentId) => {
+  const enableVoting = (studentId, boothId) => {
     if (isLockdown) return null;
     
-    // Generate a random 6-character alphanumeric code
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for(let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-
-    setActiveStudent(studentId);
-    setActivePasscode(code);
+    // Persist to localStorage for the specific booth
+    localStorage.setItem(`activeStudent_${boothId}`, studentId);
     
-    // Persist to localStorage for multi-tab support
-    localStorage.setItem('activeStudent', studentId);
-    localStorage.setItem('activePasscode', code);
-    
-    setKioskStatus('idle'); // Ready for input at the kiosk
-    logAction('security', `Authorized Voting Pass: ${studentId} and generated access code.`, 'Moderator');
-    
-    // Clear any existing expiration timer
-    if (expirationTimer.current) clearTimeout(expirationTimer.current);
-    
-    // Set 5-minute expiration (300,000 milliseconds)
-    expirationTimer.current = setTimeout(() => {
-      logAction('warning', `Voting session for ${studentId} expired due to timeout.`);
-      setActiveStudent(null);
-      setActivePasscode(null);
-      localStorage.removeItem('activeStudent');
-      localStorage.removeItem('activePasscode');
-      setKioskStatus('idle');
-    }, 300000);
-    
-    return code;
+    logAction('security', `Authorized Voting Pass: ${studentId} for ${boothId}`, 'Moderator');
   };
 
-  const cancelVoting = () => {
-    if (expirationTimer.current) clearTimeout(expirationTimer.current);
-    if (activeStudent) logAction('warning', `Force-terminated active session for ${activeStudent}`, 'Moderator');
+  const cancelVoting = (boothId) => {
+    if (boothId) {
+       localStorage.removeItem(`activeStudent_${boothId}`);
+       logAction('warning', `Force-terminated active session at ${boothId}`, 'Moderator');
+    }
     setActiveStudent(null);
-    setActivePasscode(null);
-    localStorage.removeItem('activeStudent');
-    localStorage.removeItem('activePasscode');
     setKioskStatus('idle');
   };
 
@@ -137,43 +132,24 @@ export function KioskProvider({ children }) {
     }
   };
 
-  const authenticateVoter = (inputCode) => {
+  const authenticateVoter = (boothId) => {
     if (isLockdown) return false;
     
-    // Read from localStorage to support multi-tab testing
-    const currentPasscode = localStorage.getItem('activePasscode') || activePasscode;
-    const currentStudent = localStorage.getItem('activeStudent') || activeStudent;
+    // Read from localStorage specific to this booth
+    const currentStudent = localStorage.getItem(`activeStudent_${boothId}`);
 
-    if (inputCode && currentPasscode && inputCode.toUpperCase() === currentPasscode) {
-      // Voter has authenticated, stop the expiration timer
-      if (expirationTimer.current) clearTimeout(expirationTimer.current);
-      
+    if (currentStudent) {
       setKioskStatus('voting');
-      setActivePasscode(null);
       setActiveStudent(currentStudent); // Sync local state
       
-      // Destroy the one-time code
-      localStorage.removeItem('activePasscode');
-      
-      logAction('security', `Voter ${currentStudent} successfully authenticated at kiosk with code.`);
+      logAction('security', `Voter ${currentStudent} successfully authenticated at kiosk ${boothId}.`);
       return true;
     }
     
-    // Check pre-generated credentials
-    if (inputCode) {
-      const student = roster.find(s => s.credential && s.credential.toUpperCase() === inputCode.toUpperCase());
-      if (student && student.status !== 'voted') {
-        setKioskStatus('voting');
-        setActiveStudent(student.id);
-        logAction('security', `Voter ${student.id} successfully authenticated at kiosk with pre-generated credential.`);
-        return true;
-      }
-    }
     return false;
   };
 
   const markVoted = (boothId = null) => {
-    if (expirationTimer.current) clearTimeout(expirationTimer.current);
     const boothName = boothId ? booths.find(b => b.id === boothId)?.name || boothId : 'kiosk';
     
     if (activeStudent) {
@@ -186,7 +162,10 @@ export function KioskProvider({ children }) {
     setActiveStudent(null);
     setKioskStatus('completed');
     
-    if (boothId) updateBoothStatus(boothId, 'idle');
+    if (boothId) {
+      localStorage.removeItem(`activeStudent_${boothId}`);
+      updateBoothStatus(boothId, 'idle');
+    }
     
     // Automatically reset kiosk to idle after 5 seconds
     setTimeout(() => {

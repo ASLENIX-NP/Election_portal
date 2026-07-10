@@ -10,12 +10,12 @@ export default function ModLayout() {
 
   // Protect Mod Routes (Assuming mod or admin can access)
   if (!user || (user.role !== 'moderator' && user.role !== 'admin')) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/');
   };
 
   return (

@@ -3,18 +3,19 @@ import { useKioskContext } from '@/context/KioskContext';
 import { UserCheck, Search, CheckCircle2, XCircle, ChevronRight, GraduationCap, Key } from 'lucide-react';
 
 export default function ModVerifyPage() {
-  const { roster, enableVoting } = useKioskContext();
+  const { roster, enableVoting, booths } = useKioskContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [foundStudent, setFoundStudent] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [selectedBooth, setSelectedBooth] = useState('');
   
   const handleSearch = (e) => {
     e.preventDefault();
     if (!searchTerm) return;
     
     setIsSearching(true);
-    setGeneratedCode(null); // Clear previous code on new search
+    setIsAuthorized(false); // Clear previous authorization on new search
     // Simulate a brief network delay for premium feel
     setTimeout(() => {
       const student = roster.find(s => s.id.toLowerCase() === searchTerm.toLowerCase());
@@ -24,9 +25,11 @@ export default function ModVerifyPage() {
   };
 
   const handleAuthorize = () => {
-    if (foundStudent && foundStudent.status !== 'voted') {
-      const code = enableVoting(foundStudent.id);
-      setGeneratedCode(code);
+    if (foundStudent && foundStudent.status !== 'voted' && selectedBooth) {
+      enableVoting(foundStudent.id, selectedBooth);
+      setIsAuthorized(true);
+    } else if (!selectedBooth) {
+      alert("Please select a terminal.");
     }
   };
 
@@ -131,31 +134,43 @@ export default function ModVerifyPage() {
                       </div>
                     </div>
 
-                    {generatedCode ? (
+                    {isAuthorized ? (
                       <div style={{ padding: '16px', background: 'rgba(16,185,129,0.1)', borderRadius: '14px', border: '1px solid rgba(16,185,129,0.3)', textAlign: 'center', animation: 'fadeIn 0.5s' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', color: 'var(--success)' }}>
-                          <Key size={18} />
-                          <span style={{ fontWeight: '600', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Access Code for {foundStudent.name}</span>
+                          <CheckCircle2 size={18} />
+                          <span style={{ fontWeight: '600', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Terminal Access Granted</span>
                         </div>
-                        <h1 style={{ margin: 0, fontSize: '3rem', fontWeight: '800', letterSpacing: '8px', color: 'var(--text-primary)', fontFamily: 'monospace' }}>{generatedCode}</h1>
-                        <p style={{ margin: '8px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Provide this one-time code to {foundStudent.name} to unlock their terminal.</p>
+                        <h2 style={{ margin: '12px 0', fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>{foundStudent.name} is authorized.</h2>
+                        <p style={{ margin: '0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>The voter may now proceed to the terminal and begin voting.</p>
                       </div>
                     ) : (
-                      <button
-                        className="btn"
-                        disabled={foundStudent.status === 'voted'}
-                        onClick={handleAuthorize}
-                        style={{
-                          width: "100%", justifyContent: "center", padding: '16px', fontSize: '1.1rem', fontWeight: '700',
-                          background: foundStudent.status === 'voted' ? 'rgba(0,0,0,0.05)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                          color: foundStudent.status === 'voted' ? 'var(--text-secondary)' : '#fff',
-                          border: 'none', borderRadius: '14px',
-                          boxShadow: foundStudent.status === 'voted' ? 'none' : '0 8px 20px rgba(16,185,129,0.3)',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {foundStudent.status === 'voted' ? 'Voting Session Completed' : 'Authorize Terminal Access'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <select 
+                          value={selectedBooth} 
+                          onChange={(e) => setSelectedBooth(e.target.value)}
+                          style={{ padding: '16px', borderRadius: '14px', background: 'var(--surface-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', flex: 1 }}
+                        >
+                          <option value="">Select Terminal...</option>
+                          {booths.map(b => (
+                            <option key={b.id} value={b.id}>{b.name} ({b.location})</option>
+                          ))}
+                        </select>
+                        <button
+                          className="btn"
+                          disabled={foundStudent.status === 'voted' || !selectedBooth}
+                          onClick={handleAuthorize}
+                          style={{
+                            flex: 2, justifyContent: "center", padding: '16px', fontSize: '1.1rem', fontWeight: '700',
+                            background: foundStudent.status === 'voted' || !selectedBooth ? 'rgba(0,0,0,0.05)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: foundStudent.status === 'voted' || !selectedBooth ? 'var(--text-secondary)' : '#fff',
+                            border: 'none', borderRadius: '14px',
+                            boxShadow: foundStudent.status === 'voted' || !selectedBooth ? 'none' : '0 8px 20px rgba(16,185,129,0.3)',
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {foundStudent.status === 'voted' ? 'Voting Session Completed' : 'Authorize Terminal Access'}
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
