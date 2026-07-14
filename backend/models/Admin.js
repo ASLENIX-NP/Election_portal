@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const moderatorSchema = new mongoose.Schema(
+const adminSchema = new mongoose.Schema(
   {
     username: {
       type: String,
@@ -27,7 +27,7 @@ const moderatorSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      default: "moderator",
+      default: "admin",
     },
 
     isActive: {
@@ -40,4 +40,4 @@ const moderatorSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Moderator", moderatorSchema);
+module.exports = mongoose.model("Admin", adminSchema);
