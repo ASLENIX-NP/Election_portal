@@ -6,7 +6,7 @@ import { useElection } from '@/context/ElectionContext';
 import '../dashboard.css';
 
 export default function ManageModerators() {
-  const { moderators, addModerator, updateModerator, deleteModerator } = useElection();
+  const { moderators, addModerator, updateModerator, deleteModerator, approveModerator } = useElection();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -234,9 +234,17 @@ export default function ManageModerators() {
                   <td>{m.email}</td>
                   <td>
                     <span className="badge" style={{ background: 'rgba(139, 92, 246, 0.1)', color: 'var(--accent-purple)' }}>{m.role}</span>
+                    {!m.isApproved && (
+                      <span className="badge" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', marginLeft: '8px' }}>Pending</span>
+                    )}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      {!m.isApproved && (
+                        <button className="btn" style={{ padding: '6px 12px', background: '#10b981', color: 'white', borderRadius: '8px', fontSize: '0.85rem' }} onClick={() => approveModerator(m.id)}>
+                          Approve
+                        </button>
+                      )}
                       <button className="btn" style={{ padding: '6px', background: 'transparent', color: 'var(--text-primary)' }} onClick={() => openEditModal(m)} title="Edit">
                         <Edit2 size={16} />
                       </button>

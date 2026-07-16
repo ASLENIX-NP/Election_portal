@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Card } from '@/components/common/Card';
-import { MonitorPlay, Plus, Trash2, ShieldCheck, Search, Info } from 'lucide-react';
+import { MonitorPlay, Plus, Trash2, ShieldCheck, Search, Info, Power } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
 import '../dashboard.css';
 
 export default function ManageBooths() {
-  const { booths, addBooth, removeBooth } = useKioskContext();
+  const { booths, addBooth, removeBooth, updateBoothStatus } = useKioskContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBooth, setNewBooth] = useState({ name: '', location: '' });
@@ -57,8 +58,8 @@ export default function ManageBooths() {
       </div>
 
       {/* Add Booth Modal */}
-      {showAddForm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }}>
+      {showAddForm && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }}>
           <div className="dashboard-panel" style={{ width: '100%', maxWidth: '450px', padding: '2.5rem', position: 'relative', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)' }}>
             
             {/* Ambient glow inside the modal */}
@@ -108,7 +109,8 @@ export default function ManageBooths() {
             </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Main Content Area */}
@@ -211,7 +213,18 @@ export default function ManageBooths() {
                    </div>
                 </div>
 
-                <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => updateBoothStatus(booth.id, booth.status === 'offline' ? 'idle' : 'offline')}
+                    style={{ 
+                      background: booth.status === 'offline' ? '#10b981' : '#f1f5f9', 
+                      color: booth.status === 'offline' ? '#fff' : '#64748b', 
+                      border: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', padding: '8px 16px', borderRadius: '12px', transition: 'all 0.2s', boxShadow: booth.status === 'offline' ? '0 4px 12px rgba(16,185,129,0.2)' : 'none'
+                    }}
+                  >
+                    <Power size={16} /> {booth.status === 'offline' ? 'Power On' : 'Power Off'}
+                  </button>
+
                   <button 
                     onClick={() => removeBooth(booth.id)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', padding: '8px 12px', borderRadius: '8px', transition: 'all 0.2s' }}

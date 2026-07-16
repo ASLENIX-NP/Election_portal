@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthContext } from '@/context/AuthContext';
 import { Users, Lock, User as UserIcon, ArrowLeft, ChevronRight, AlertCircle } from 'lucide-react';
 
@@ -102,6 +102,7 @@ export default function ModLogin() {
                 <label style={{ color: '#334155', fontSize: '0.95rem', fontWeight: 600 }}>
                   Password
                 </label>
+                <Link to="/mod/forgot-password" style={{ fontSize: '0.85rem', color: '#8b5cf6', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = '#6d28d9'} onMouseOut={e => e.target.style.color = '#8b5cf6'}>Forgot password?</Link>
               </div>
               <div style={{ position: 'relative' }}>
                 <Lock size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
@@ -135,6 +136,12 @@ export default function ModLogin() {
                 <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', boxShadow: '0 0 10px #8b5cf6' }}></span>
                 Hint: Use <strong style={{ color: '#0f172a' }}>mod</strong> / <strong style={{ color: '#0f172a' }}>mod123</strong>
               </p>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <Link to="/mod/signup" style={{ fontSize: '0.9rem', color: '#8b5cf6', textDecoration: 'none', fontWeight: 600 }}>
+                Don't have an account? Sign up
+              </Link>
             </div>
           </form>
         </div>

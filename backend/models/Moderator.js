@@ -35,11 +35,19 @@ const moderatorSchema = new mongoose.Schema(
       default: true,
     },
 
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+
     themePreference: {
       type: String,
       enum: ["light", "dark"],
       default: "light",
     },
+
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
   {
     timestamps: true,

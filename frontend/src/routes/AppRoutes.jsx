@@ -12,6 +12,9 @@ import ManageStudents from '@/pages/admin/students/page';
 import ManageModerators from '@/pages/admin/moderators/page';
 import AdminSettings from '@/pages/admin/settings/page';
 import AdminLogin from '@/pages/admin/login/page';
+import AdminSignup from '@/pages/admin/signup/page';
+import AdminForgotPassword from '@/pages/admin/forgot-password/page';
+import AdminResetPassword from '@/pages/admin/reset-password/page';
 import ManageBallot from '@/pages/admin/ballot/page';
 import ManageBooths from '@/pages/admin/booths/page';
 import AdminAuditLedger from '@/pages/admin/audit/page';
@@ -22,6 +25,9 @@ import ModBoothsPage from '@/pages/mod/booths/page';
 import ModAuditLogs from '@/pages/mod/audit/page';
 import ModResetPage from '@/pages/mod/reset/page';
 import ModLogin from '@/pages/mod/login/page';
+import ModSignup from '@/pages/mod/signup/page';
+import ModForgotPassword from '@/pages/mod/forgot-password/page';
+import ModResetPassword from '@/pages/mod/reset-password/page';
 
 import VoteLogin from '@/pages/vote/page';
 import BallotPage from '@/pages/vote/ballot/page';
@@ -42,6 +48,9 @@ export default function AppRoutes() {
 
       {/* Public Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/signup" element={<AdminSignup />} />
+      <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+      <Route path="/admin/reset-password/:token" element={<AdminResetPassword />} />
 
       {/* Protected Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>
@@ -57,6 +66,9 @@ export default function AppRoutes() {
 
       {/* Moderator Routes */}
       <Route path="/mod/login" element={<ModLogin />} />
+      <Route path="/mod/signup" element={<ModSignup />} />
+      <Route path="/mod/forgot-password" element={<ModForgotPassword />} />
+      <Route path="/mod/reset-password/:token" element={<ModResetPassword />} />
       <Route path="/mod" element={<ModLayout />}>
         <Route index element={<ModDashboard />} />
         <Route path="students" element={<ManageStudents />} />

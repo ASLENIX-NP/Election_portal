@@ -10,6 +10,7 @@ const getModerators = async (req, res) => {
       name: m.fullName,
       email: m.email,
       role: m.role,
+      isApproved: m.isApproved,
       avatar: m.fullName.substring(0, 2).toUpperCase(),
       color: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#06b6d4'][Math.floor(Math.random() * 6)]
     }));
@@ -38,6 +39,7 @@ const createModerator = async (req, res) => {
       name: mod.fullName,
       email: mod.email,
       role: mod.role,
+      isApproved: mod.isApproved,
       avatar: mod.fullName.substring(0, 2).toUpperCase(),
       color: '#3b82f6'
     });
@@ -55,4 +57,14 @@ const deleteModerator = async (req, res) => {
   }
 };
 
-module.exports = { getModerators, createModerator, deleteModerator };
+const approveModerator = async (req, res) => {
+  try {
+    const mod = await Moderator.findByIdAndUpdate(req.params.id, { isApproved: true }, { new: true });
+    if (!mod) return res.status(404).json({ message: "Moderator not found" });
+    res.json({ message: "Moderator approved", id: mod._id, isApproved: mod.isApproved });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+module.exports = { getModerators, createModerator, deleteModerator, approveModerator };

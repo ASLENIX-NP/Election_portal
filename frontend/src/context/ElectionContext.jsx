@@ -326,23 +326,39 @@ export function ElectionProvider({ children }) {
     setPositions(prev => prev.filter(p => p.id !== id));
   };
 
-  const addCandidate = (candidateData) => {
-    const newCandidate = {
-      ...candidateData,
-      id: Date.now(),
-      votes: 0,
-      avatar: candidateData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
-      color: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'][Math.floor(Math.random() * 5)]
-    };
-    setCandidates(prev => [...prev, newCandidate]);
+  const addCandidate = async (candidateData) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(candidateData)
+      });
+      if (res.ok) {
+        const newCandidate = await res.json();
+        setCandidates(prev => [...prev, newCandidate]);
+      }
+    } catch(err) { console.error("Failed to add candidate", err); }
   };
 
-  const updateCandidate = (id, candidateData) => {
-    setCandidates(prev => prev.map(c => c.id === id ? { ...c, ...candidateData } : c));
+  const updateCandidate = async (id, candidateData) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/candidates/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(candidateData)
+      });
+      if (res.ok) {
+        const updatedCandidate = await res.json();
+        setCandidates(prev => prev.map(c => c.id === id ? { ...c, ...updatedCandidate } : c));
+      }
+    } catch(err) { console.error("Failed to update candidate", err); }
   };
 
-  const deleteCandidate = (id) => {
-    setCandidates(prev => prev.filter(c => c.id !== id));
+  const deleteCandidate = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/candidates/${id}`, { method: 'DELETE' });
+      if (res.ok) setCandidates(prev => prev.filter(c => c.id !== id));
+    } catch(err) { console.error("Failed to delete candidate", err); }
   };
 
   const [moderators, setModerators] = useState([]);
@@ -365,6 +381,17 @@ export function ElectionProvider({ children }) {
     setModerators(prev => prev.map(m => m.id === id ? { ...m, ...modData } : m));
   };
 
+  const approveModerator = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/moderators/${id}/approve`, { method: 'PUT' });
+      if (res.ok) {
+        setModerators(prev => prev.map(m => m.id === id ? { ...m, isApproved: true } : m));
+      }
+    } catch (err) {
+      console.error("Failed to approve moderator", err);
+    }
+  };
+
   const deleteModerator = async (id) => {
     try {
       const res = await fetch(`http://localhost:5000/api/moderators/${id}`, { method: 'DELETE' });
@@ -378,7 +405,7 @@ export function ElectionProvider({ children }) {
       totalVotes, totalEligible, candidates, trendData, demoData, recentActivity,
       positions, addPosition, updatePosition, deletePosition,
       addCandidate, updateCandidate, deleteCandidate,
-      moderators, addModerator, updateModerator, deleteModerator,
+      moderators, addModerator, updateModerator, approveModerator, deleteModerator,
       advancedSettings, updateAdvancedSettings,
       processCsvData, resetData, castBallot,
       isPublished, togglePublish

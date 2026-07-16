@@ -166,7 +166,7 @@ export default function BallotPage() {
                         </div>
 
                         <img 
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random&color=fff&size=120`} 
+                          src={candidate.photoUrl || candidate.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random&color=fff&size=120`} 
                           alt={candidate.name}
                           style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: isSelected ? '4px solid #10b981' : '1px solid #e2e8f0', marginBottom: '1.25rem', transition: 'all 0.2s ease', boxShadow: isSelected ? '0 0 0 4px rgba(16, 185, 129, 0.2)' : 'none' }}
                         />

@@ -5,19 +5,31 @@ const candidateSchema = new mongoose.Schema(
     student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
-      required: true,
+      required: false,
     },
 
     position: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Position",
-      required: true,
+      required: false,
     },
 
     election: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Election",
-      required: true,
+      required: false,
+    },
+
+    name: {
+      type: String,
+    },
+    
+    positionName: {
+      type: String,
+    },
+    
+    grade: {
+      type: String,
     },
 
     manifesto: {

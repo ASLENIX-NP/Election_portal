@@ -124,10 +124,14 @@ export default function PublicPortal() {
                         </div>
 
                         {/* Candidate Visual Avatar */}
-                        <div className="portal-candidate-avatar-wrapper" style={{ border: `1.5px solid ${candidate.color}25` }}>
-                          <div className="portal-candidate-avatar" style={{ background: `${candidate.color}0a`, color: candidate.color }}>
-                            {candidate.avatar}
-                          </div>
+                        <div className="portal-candidate-avatar-wrapper" style={{ border: `1.5px solid ${candidate.color}25`, overflow: 'hidden' }}>
+                          {candidate.photoUrl || candidate.photo ? (
+                            <img src={candidate.photoUrl || candidate.photo} alt={candidate.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                          ) : (
+                            <div className="portal-candidate-avatar" style={{ background: `${candidate.color}0a`, color: candidate.color, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                              {candidate.avatar}
+                            </div>
+                          )}
                         </div>
 
                         {/* Name and Tally Info */}
