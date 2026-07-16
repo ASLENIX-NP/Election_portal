@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/common/Card';
 import { MonitorPlay, Plus, Trash2, ShieldCheck, Search, Info } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
+import '../dashboard.css';
 
 export default function ManageBooths() {
   const { booths, addBooth, removeBooth } = useKioskContext();
@@ -28,37 +29,37 @@ export default function ManageBooths() {
   };
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem' }}>
+    <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
       
-      {/* Premium Header */}
-      <div className="page-header authentic-header" style={{ marginBottom: '2.5rem' }}>
+      {/* ─── Header ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', paddingBottom: '2rem', borderBottom: '1px solid var(--border-color)' }}>
         <div>
-          <div className="header-title-row">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '2.25rem', fontWeight: '800', letterSpacing: '-0.02em', margin: 0 }}>
-              <div style={{ padding: '12px', background: 'var(--text-primary)', color: 'var(--bg-color)', borderRadius: '16px', display: 'flex', boxShadow: '0 8px 20px rgba(0,0,0,0.15)' }}>
-                <MonitorPlay size={28} />
-              </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '10px' }}>
+            <div style={{ padding: '10px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
+              <MonitorPlay size={24} color="#3b82f6" />
+            </div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', margin: 0 }}>
               Voting Booths
             </h1>
           </div>
-          <p className="header-subtitle" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '1.1rem' }}>
-            <ShieldCheck size={18} style={{ color: 'var(--accent)' }} /> Register and monitor physical voting terminals across campus.
+          <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>
+            Register and monitor physical voting terminals across campus.
           </p>
         </div>
-        
         <button 
-          className="btn btn-primary"
-          onClick={() => setShowAddForm(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)' }}
+          onClick={() => setShowAddForm(true)} 
+          style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(15,23,42,0.2)', transition: 'transform 0.2s' }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
-          <Plus size={20} /> Register New Booth
+          <Plus size={18} /> Register New Booth
         </button>
       </div>
 
       {/* Add Booth Modal */}
       {showAddForm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }}>
-          <Card style={{ width: '100%', maxWidth: '450px', padding: '2.5rem', position: 'relative', borderRadius: '24px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', overflow: 'hidden' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }}>
+          <div className="dashboard-panel" style={{ width: '100%', maxWidth: '450px', padding: '2.5rem', position: 'relative', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)' }}>
             
             {/* Ambient glow inside the modal */}
             <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)', filter: 'blur(20px)', zIndex: 0 }}></div>
@@ -106,7 +107,7 @@ export default function ManageBooths() {
               </div>
             </form>
             </div>
-          </Card>
+          </div>
         </div>
       )}
 
@@ -114,26 +115,30 @@ export default function ManageBooths() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         {/* Analytics & Search Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
-          <Card style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', background: 'linear-gradient(145deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-            <div style={{ padding: '1rem', background: 'var(--surface-color)', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-              <MonitorPlay size={24} color="#3b82f6" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem', marginBottom: '1rem' }}>
+          <div className="dashboard-stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <p style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>Total Registered</p>
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>
+                <MonitorPlay size={20} color="#fff" />
+              </div>
             </div>
-            <div>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Registered</p>
-              <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: 800 }}>{booths.length}</h3>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem' }}>
+              <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, letterSpacing: '-0.03em' }}>{booths.length}</span>
             </div>
-          </Card>
+          </div>
           
-          <Card style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-            <div style={{ padding: '1rem', background: 'var(--surface-color)', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-              <div className="pulse-dot" style={{ width: 16, height: 16, background: '#10b981', boxShadow: '0 0 12px #10b981' }}></div>
+          <div className="dashboard-stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <p style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>Active / Idle</p>
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+                <div className="pulse-dot" style={{ width: 12, height: 12, background: '#fff', borderRadius: '50%' }}></div>
+              </div>
             </div>
-            <div>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active / Idle</p>
-              <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem', fontWeight: 800 }}>{booths.filter(b => b.status === 'idle').length}</h3>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem' }}>
+              <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, letterSpacing: '-0.03em' }}>{booths.filter(b => b.status === 'idle').length}</span>
             </div>
-          </Card>
+          </div>
           
           <div style={{ display: 'flex', alignItems: 'flex-end' }}>
             <div style={{ position: 'relative', width: '100%' }}>
@@ -145,19 +150,19 @@ export default function ManageBooths() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{ 
                   width: '100%', 
-                  background: 'var(--surface-color)', 
+                  background: '#fff', 
                   border: '1px solid var(--border-color)', 
-                  color: 'var(--text-primary)',
+                  color: '#0f172a',
                   padding: '16px 16px 16px 48px',
                   borderRadius: '16px',
                   outline: 'none',
                   fontSize: '1rem',
                   fontWeight: 500,
                   transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.04)'
                 }}
-                onFocus={(e) => { e.target.style.borderColor = 'var(--text-primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.1)'; }}
-                onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)'; }}
+                onFocus={(e) => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 4px 12px rgba(59,130,246,0.1)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.boxShadow = '0 8px 24px rgba(0,0,0,0.04)'; }}
               />
             </div>
           </div>
@@ -174,7 +179,7 @@ export default function ManageBooths() {
             </div>
           ) : (
             filteredBooths.map(booth => (
-              <Card key={booth.id} className="hover-lift" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', borderRadius: '20px', border: booth.status === 'offline' ? '1px solid var(--border-color)' : '1px solid rgba(16, 185, 129, 0.3)', background: booth.status === 'offline' ? 'var(--surface-color)' : 'linear-gradient(145deg, rgba(16, 185, 129, 0.05), var(--surface-color))' }}>
+              <div key={booth.id} className="dashboard-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: booth.status === 'offline' ? '1px solid var(--border-color)' : '1px solid rgba(16, 185, 129, 0.3)', background: booth.status === 'offline' ? 'rgba(255,255,255,0.85)' : 'linear-gradient(145deg, rgba(16, 185, 129, 0.05), rgba(255,255,255,0.9))' }}>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -210,14 +215,14 @@ export default function ManageBooths() {
                   <button 
                     onClick={() => removeBooth(booth.id)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', padding: '8px 12px', borderRadius: '8px', transition: 'all 0.2s' }}
-                    onMouseOver={(e) => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+                    onMouseOver={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
                     onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.background = 'transparent'; }}
                   >
                     <Trash2 size={18} /> Remove Booth
                   </button>
                 </div>
                 
-              </Card>
+              </div>
             ))
           )}
           

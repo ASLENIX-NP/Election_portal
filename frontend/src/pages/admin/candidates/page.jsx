@@ -1,8 +1,9 @@
 import { useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Card } from '@/components/common/Card';
-import { Plus, Edit2, Trash2, X, Image as ImageIcon, Award, Users, Search, ChevronLeft, ChevronRight, CheckSquare, Square } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Image as ImageIcon, Award, Users, Search, ChevronLeft, ChevronRight, CheckSquare, Square, UserPlus } from 'lucide-react';
 import { useElection } from '@/context/ElectionContext';
+import '../dashboard.css';
 
 export default function ManageCandidates() {
   const { candidates, positions, addCandidate, updateCandidate, deleteCandidate } = useElection();
@@ -127,35 +128,49 @@ export default function ManageCandidates() {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header authentic-header">
+    <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+      
+      {/* ─── Header ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', paddingBottom: '2rem', borderBottom: '1px solid var(--border-color)' }}>
         <div>
-          <div className="header-title-row">
-            <h1>Manage Candidates</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '10px' }}>
+            <div style={{ padding: '10px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '14px', display: 'flex', boxShadow: '0 4px 12px rgba(0,0,0,0.12)' }}>
+              <Users size={24} color="#8b5cf6" />
+            </div>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a', margin: 0 }}>
+              Manage Candidates
+            </h1>
           </div>
-          <p className="header-subtitle">Add, edit, or remove candidates, and manage their profiles.</p>
+          <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>
+            Add, edit, or remove candidates, and manage their profiles.
+          </p>
         </div>
-        <button className="btn btn-primary" onClick={openAddModal} style={{ background: 'var(--text-primary)', color: 'var(--bg-color)' }}>
-          <Plus size={18} />
+        <button 
+          onClick={openAddModal} 
+          style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(15,23,42,0.2)', transition: 'transform 0.2s' }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <UserPlus size={18} />
           Add Candidate
         </button>
       </div>
 
-      <div className="dashboard-grid" style={{ marginBottom: '2rem' }}>
-        <Card className="stat-card authentic-card">
-          <div className="stat-content">
-            <div className="stat-header">
-              <h3 className="stat-title">Total Candidates</h3>
-              <div className="stat-icon-wrapper" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent)' }}>
-                <Users size={22} />
-              </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '1.25rem', marginBottom: '2.5rem' }}>
+        <div className="dashboard-stat-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>Total Candidates</p>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(139,92,246,0.3)' }}>
+              <Users size={20} color="#fff" />
             </div>
-            <div className="stat-value">{candidates.length}</div>
           </div>
-        </Card>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem' }}>
+            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, letterSpacing: '-0.03em' }}>{candidates.length}</span>
+          </div>
+        </div>
       </div>
 
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="dashboard-panel">
         {/* Toolbar */}
         <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color)' }}>
           <div className="form-control" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '320px', background: 'var(--surface-hover)', borderRadius: '8px', padding: '10px 16px' }}>
@@ -261,11 +276,11 @@ export default function ManageCandidates() {
             </button>
           </div>
         </div>
-      </Card>
+      </div>
 
       {isModalOpen && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Card className="authentic-card" style={{ width: '480px', padding: '2rem', animation: 'fadeIn 0.2s ease-out' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="dashboard-panel" style={{ width: '480px', padding: '2.5rem', animation: 'fadeIn 0.2s ease-out', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)' }}>
             <div className="flex-between mb-6">
               <h3 className="card-title" style={{ marginBottom: 0 }}>{isEditing ? 'Edit Candidate' : 'Add Candidate'}</h3>
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
@@ -346,21 +361,24 @@ export default function ManageCandidates() {
                 </button>
               </div>
             </form>
-          </Card>
+          </div>
         </div>,
         document.body
       )}
 
       {confirmDeleteId && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Card className="authentic-card" style={{ width: '380px', padding: '2rem', animation: 'fadeIn 0.2s ease-out' }}>
-            <h3 className="card-title mb-2" style={{ color: 'var(--danger)' }}>Remove Candidate</h3>
-            <p className="text-secondary mb-6 text-sm">Are you sure you want to remove this candidate? This will immediately remove them from the active ballot.</p>
-            <div className="flex gap-3 justify-end">
-              <button className="btn btn-secondary" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
-              <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => { deleteCandidate(confirmDeleteId); setConfirmDeleteId(null); }}>Yes, Remove</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="dashboard-panel" style={{ width: '400px', padding: '2.5rem', animation: 'fadeIn 0.2s ease-out', borderRadius: '24px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Trash2 size={32} />
             </div>
-          </Card>
+            <h3 className="card-title mb-3" style={{ fontSize: '1.5rem', fontWeight: 800 }}>Remove Candidate?</h3>
+            <p className="text-secondary mb-8 text-sm" style={{ lineHeight: 1.6 }}>Are you sure you want to remove this candidate? This will immediately remove them from the active ballot.</p>
+            <div className="flex gap-3 justify-center">
+              <button className="btn btn-secondary" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 600, flex: 1 }} onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+              <button className="btn" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 600, background: 'var(--danger)', color: 'white', flex: 1 }} onClick={() => { deleteCandidate(confirmDeleteId); setConfirmDeleteId(null); }}>Yes, Remove</button>
+            </div>
+          </div>
         </div>,
         document.body
       )}

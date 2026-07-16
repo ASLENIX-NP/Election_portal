@@ -21,19 +21,24 @@ import ModVerifyPage from '@/pages/mod/verify/page';
 import ModBoothsPage from '@/pages/mod/booths/page';
 import ModAuditLogs from '@/pages/mod/audit/page';
 import ModResetPage from '@/pages/mod/reset/page';
+import ModLogin from '@/pages/mod/login/page';
 
 import VoteLogin from '@/pages/vote/page';
 import BallotPage from '@/pages/vote/ballot/page';
 import ReceiptPage from '@/pages/vote/receipt/page';
 import LandingPage from '@/pages/LandingPage';
+import VoterLogin from '@/pages/voter/login/page';
 import VerifyPage from '@/pages/verify/page';
+import PublicPortal from '@/pages/portal/page';
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Landing Page */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/voter/login" element={<VoterLogin />} />
       <Route path="/verify" element={<VerifyPage />} />
+      <Route path="/portal" element={<PublicPortal />} />
 
       {/* Public Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
@@ -42,7 +47,7 @@ export default function AppRoutes() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
         <Route path="ballot" element={<ManageBallot />} />
-        <Route path="candidates" element={<ManageCandidates />} />
+        <Route path="candidates" element={<Navigate to="/admin/ballot" replace />} />
         <Route path="students" element={<ManageStudents />} />
         <Route path="moderators" element={<ManageModerators />} />
         <Route path="booths" element={<ManageBooths />} />
@@ -51,8 +56,10 @@ export default function AppRoutes() {
       </Route>
 
       {/* Moderator Routes */}
+      <Route path="/mod/login" element={<ModLogin />} />
       <Route path="/mod" element={<ModLayout />}>
         <Route index element={<ModDashboard />} />
+        <Route path="students" element={<ManageStudents />} />
         <Route path="verify" element={<ModVerifyPage />} />
         <Route path="booths" element={<ModBoothsPage />} />
         <Route path="audit" element={<ModAuditLogs />} />

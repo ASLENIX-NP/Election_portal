@@ -1,6 +1,7 @@
 import React from 'react';
 import { History, ShieldCheck, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
+import '../mod.css';
 
 export default function ModAuditLogs() {
   const { auditLogs } = useKioskContext();
@@ -27,10 +28,10 @@ export default function ModAuditLogs() {
 
   return (
     <div className="animate-fade-in" style={{ padding: '2.5rem', position: 'relative' }}>
-      <div className="page-header" style={{ marginBottom: '3rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1.5rem' }}>
+      <div className="page-header" style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem' }}>
         <div className="header-title-row" style={{ marginBottom: '12px' }}>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '2.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
-            <div style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '16px', display: 'flex' }}>
+            <div style={{ padding: '12px', background: 'var(--surface-hover)', borderRadius: '16px', display: 'flex' }}>
               <History size={28} color="var(--accent)" />
             </div>
             Audit Logs
@@ -41,7 +42,7 @@ export default function ModAuditLogs() {
         </p>
       </div>
 
-      <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="mod-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {auditLogs.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '3rem 0' }}>No logs recorded yet.</div>
         ) : (
@@ -49,8 +50,8 @@ export default function ModAuditLogs() {
             <div key={log.id} style={{ 
               display: 'flex', alignItems: 'center', gap: '1rem', 
               padding: '1rem', borderRadius: '12px',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.05)'
+              background: 'var(--surface-color)',
+              border: '1px solid var(--border-color)'
             }}>
               <div style={{ padding: '10px', borderRadius: '10px', background: getLogColor(log.type) }}>
                 {getLogIcon(log.type)}

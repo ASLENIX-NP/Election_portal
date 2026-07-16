@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UserCheck, MonitorPlay, LogOut, History, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, UserCheck, MonitorPlay, LogOut, History, RefreshCcw, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { useAuthContext } from '@/context/AuthContext';
 
 export default function ModLayout() {
@@ -30,6 +30,10 @@ export default function ModLayout() {
           <NavLink to="/mod" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Dashboard">
             <LayoutDashboard size={20} />
             <span className="nav-text">Dashboard</span>
+          </NavLink>
+          <NavLink to="/mod/students" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Manage Voters">
+            <Users size={20} />
+            <span className="nav-text">Manage Voters</span>
           </NavLink>
           <NavLink to="/mod/verify" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Verify Voters">
             <UserCheck size={20} />

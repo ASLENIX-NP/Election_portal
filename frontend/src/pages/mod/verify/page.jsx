@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useKioskContext } from '@/context/KioskContext';
+import { useElection } from '@/context/ElectionContext';
 import { UserCheck, Search, CheckCircle2, XCircle, GraduationCap, MonitorPlay, Users, ChevronRight, AlertCircle } from 'lucide-react';
+import '../mod.css';
 
 export default function ModVerifyPage() {
   const { roster, enableVoting, booths } = useKioskContext();
+  const { advancedSettings } = useElection();
   const [searchTerm, setSearchTerm] = useState('');
   const [foundStudent, setFoundStudent] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -33,7 +36,8 @@ export default function ModVerifyPage() {
       setBoothError(true);
       return;
     }
-    if (foundStudent && foundStudent.status !== 'voted' && selectedBooth) {
+    const isGradeEligible = advancedSettings.eligibleGrades ? advancedSettings.eligibleGrades.includes(foundStudent?.grade) : true;
+    if (foundStudent && foundStudent.status !== 'voted' && isGradeEligible && selectedBooth) {
       enableVoting(foundStudent.id, selectedBooth);
       setIsAuthorized(true);
       setBoothError(false);
@@ -124,7 +128,7 @@ export default function ModVerifyPage() {
 
       {/* ─── Student Result Card ─── */}
       {foundStudent && foundStudent !== 'not_found' && (
-        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', marginBottom: '1.5rem' }}>
+        <div className="mod-panel" style={{ marginBottom: '1.5rem' }}>
           
           {/* Card Top Bar */}
           <div style={{ height: '4px', background: foundStudent.status === 'voted' ? '#ef4444' : '#10b981' }}></div>
@@ -167,79 +171,90 @@ export default function ModVerifyPage() {
                 </div>
 
                 {/* Status Row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1rem' }}>
-                  <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Voting Status</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
-                      {foundStudent.status === 'voted' ? 'Already Voted' : 'Eligible to Vote'}
-                    </p>
-                  </div>
-                  <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Clearance</p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.95rem', fontWeight: 700, color: foundStudent.status === 'voted' ? '#ef4444' : '#10b981' }}>
-                      {foundStudent.status === 'voted' ? 'DENIED' : 'APPROVED'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Authorization Section */}
-                {isAuthorized ? (
-                  <div style={{ padding: '14px', background: 'rgba(16,185,129,0.06)', borderRadius: '12px', border: '1px solid rgba(16,185,129,0.15)', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px', color: '#10b981' }}>
-                      <CheckCircle2 size={18} />
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Terminal Access Granted</span>
-                    </div>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.88rem' }}>
-                      <strong>{foundStudent.name}</strong> may now proceed to the terminal.
-                    </p>
-                  </div>
-                ) : foundStudent.status !== 'voted' ? (
-                  <div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <MonitorPlay size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                        <select 
-                          value={selectedBooth} 
-                          onChange={(e) => { setSelectedBooth(e.target.value); setBoothError(false); }}
-                          style={{ 
-                            width: '100%', padding: '12px 12px 12px 36px', borderRadius: '10px', 
-                            background: '#fff', color: '#0f172a', 
-                            border: boothError ? '2px solid #ef4444' : '1px solid var(--border-color)', 
-                            outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit', fontWeight: 500,
-                            appearance: 'none', cursor: 'pointer', transition: 'border-color 0.2s ease'
-                          }}
-                        >
-                          <option value="">Select Terminal...</option>
-                          {booths.filter(b => b.status !== 'offline').map(b => (
-                            <option key={b.id} value={b.id}>{b.name} — {b.location}</option>
-                          ))}
-                        </select>
-                        {boothError && (
-                          <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <AlertCircle size={13} /> Please select a terminal first
+                {(() => {
+                  const isGradeEligible = advancedSettings.eligibleGrades ? advancedSettings.eligibleGrades.includes(foundStudent.grade) : true;
+                  return (
+                    <React.Fragment>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1rem' }}>
+                        <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                          <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Voting Status</p>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+                            {foundStudent.status === 'voted' ? 'Already Voted' : (!isGradeEligible ? 'Grade Ineligible' : 'Eligible to Vote')}
                           </p>
-                        )}
+                        </div>
+                        <div style={{ padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                          <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Clearance</p>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.95rem', fontWeight: 700, color: (foundStudent.status === 'voted' || !isGradeEligible) ? '#ef4444' : '#10b981' }}>
+                            {(foundStudent.status === 'voted' || !isGradeEligible) ? 'DENIED' : 'APPROVED'}
+                          </p>
+                        </div>
                       </div>
-                      <button
-                        onClick={handleAuthorize}
-                        style={{
-                          padding: '12px 24px', fontSize: '0.9rem', fontWeight: 700,
-                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                          color: '#fff', border: 'none', borderRadius: '10px',
-                          boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
-                          cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px',
-                          transition: 'all 0.2s ease', whiteSpace: 'nowrap'
-                        }}
-                      >
-                        <CheckCircle2 size={18} /> Authorize
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ padding: '12px', background: 'rgba(239,68,68,0.05)', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.12)', textAlign: 'center' }}>
-                    <p style={{ margin: 0, color: '#ef4444', fontSize: '0.88rem', fontWeight: 600 }}>This voter has already completed their voting session.</p>
-                  </div>
-                )}
+
+                      {/* Authorization Section */}
+                      {isAuthorized ? (
+                        <div style={{ padding: '14px', background: 'rgba(16,185,129,0.06)', borderRadius: '12px', border: '1px solid rgba(16,185,129,0.15)', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px', color: '#10b981' }}>
+                            <CheckCircle2 size={18} />
+                            <span style={{ fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Terminal Access Granted</span>
+                          </div>
+                          <p style={{ margin: 0, color: '#64748b', fontSize: '0.88rem' }}>
+                            <strong>{foundStudent.name}</strong> may now proceed to the terminal.
+                          </p>
+                        </div>
+                      ) : foundStudent.status === 'voted' ? (
+                        <div style={{ padding: '12px', background: 'rgba(239,68,68,0.05)', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.12)', textAlign: 'center' }}>
+                          <p style={{ margin: 0, color: '#ef4444', fontSize: '0.88rem', fontWeight: 600 }}>This voter has already completed their voting session.</p>
+                        </div>
+                      ) : !isGradeEligible ? (
+                        <div style={{ padding: '12px', background: 'rgba(245,158,11,0.05)', borderRadius: '10px', border: '1px solid rgba(245,158,11,0.2)', textAlign: 'center' }}>
+                          <p style={{ margin: 0, color: '#d97706', fontSize: '0.88rem', fontWeight: 600 }}>This voter's grade level is not currently permitted to vote.</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <div style={{ flex: 1, position: 'relative' }}>
+                              <MonitorPlay size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                              <select 
+                                value={selectedBooth} 
+                                onChange={(e) => { setSelectedBooth(e.target.value); setBoothError(false); }}
+                                style={{ 
+                                  width: '100%', padding: '12px 12px 12px 36px', borderRadius: '10px', 
+                                  background: '#fff', color: '#0f172a', 
+                                  border: boothError ? '2px solid #ef4444' : '1px solid var(--border-color)', 
+                                  outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit', fontWeight: 500,
+                                  appearance: 'none', cursor: 'pointer', transition: 'border-color 0.2s ease'
+                                }}
+                              >
+                                <option value="">Select Terminal...</option>
+                                {booths.filter(b => b.status !== 'offline').map(b => (
+                                  <option key={b.id} value={b.id}>{b.name} — {b.location}</option>
+                                ))}
+                              </select>
+                              {boothError && (
+                                <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <AlertCircle size={13} /> Please select a terminal first
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={handleAuthorize}
+                              style={{
+                                padding: '12px 24px', fontSize: '0.9rem', fontWeight: 700,
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                color: '#fff', border: 'none', borderRadius: '10px',
+                                boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                                cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px',
+                                transition: 'all 0.2s ease', whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <CheckCircle2 size={18} /> Authorize
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -248,7 +263,7 @@ export default function ModVerifyPage() {
 
       {/* Not Found */}
       {foundStudent === 'not_found' && (
-        <div style={{ padding: '2.5rem', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '1px dashed rgba(239,68,68,0.25)', marginBottom: '1.5rem' }}>
+        <div className="mod-panel" style={{ padding: '2.5rem', textAlign: 'center', border: '1px dashed rgba(239,68,68,0.25)', marginBottom: '1.5rem' }}>
           <XCircle size={40} color="#ef4444" style={{ margin: '0 auto 12px auto', opacity: 0.7 }} />
           <h3 style={{ color: '#ef4444', margin: '0 0 6px 0', fontSize: '1.15rem', fontWeight: 700 }}>No Record Found</h3>
           <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>No student matches "<strong>{searchTerm}</strong>". Check for typos and try again.</p>
@@ -256,7 +271,7 @@ export default function ModVerifyPage() {
       )}
 
       {/* ─── Voter Directory ─── */}
-      <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+      <div className="mod-panel">
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Users size={18} color="#06b6d4" /> Voter Directory

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RefreshCcw, Search, CheckCircle2, ShieldAlert, FileKey, AlertCircle, MonitorPlay, GraduationCap, XCircle, AlertTriangle } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
+import '../mod.css';
 
 export default function ModResetPage() {
   const { roster, logAction, isLockdown, enableVoting, booths } = useKioskContext();
@@ -93,7 +94,7 @@ export default function ModResetPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.25rem', alignItems: 'start' }}>
         
         {/* Left: Search Panel */}
-        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+        <div className="mod-panel">
           <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)' }}>
             <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Search size={18} color="#3b82f6" /> Lookup Voter
@@ -160,7 +161,7 @@ export default function ModResetPage() {
 
         {/* Right: Result Panel */}
         {searchResult ? (
-          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+          <div className="mod-panel">
             {/* Status bar */}
             <div style={{ height: '3px', background: searchResult.status === 'voted' ? '#ef4444' : '#f59e0b' }}></div>
             
@@ -283,7 +284,7 @@ export default function ModResetPage() {
           </div>
         ) : (
           /* Empty State */
-          <div style={{ background: '#fff', borderRadius: '16px', border: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem', textAlign: 'center' }}>
+          <div className="mod-panel" style={{ border: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem', textAlign: 'center' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
               <FileKey size={26} color="#cbd5e1" />
             </div>

@@ -1,143 +1,84 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, User, Lock, EyeOff, Eye, LogIn, ArrowRight } from 'lucide-react';
-import { useAuthContext } from '@/context/AuthContext';
-import { useKioskContext } from '@/context/KioskContext';
+import { Shield, Users, Vote, ChevronRight } from 'lucide-react';
 import '@/pages/home.css';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { login } = useAuthContext();
-  const { booths } = useKioskContext();
-  
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedBooth, setSelectedBooth] = useState(booths[0]?.id || 'booth-01');
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate slight network delay for better UX
-    setTimeout(() => {
-      if (username === 'admin' && password === 'admin123') {
-        login({ role: 'admin', name: 'System Admin', email: username });
-        navigate('/admin');
-      } else if (username === 'mod' && password === 'mod123') {
-        login({ role: 'moderator', name: 'Desk Moderator', email: username });
-        navigate('/mod');
-      } else if (username === 'voter' && password === 'voter123') {
-        login({ role: 'voter', name: 'Student Voter', email: username });
-        navigate(`/vote/${selectedBooth}`);
-      } else {
-        setError('Invalid username or password.');
-        setIsLoading(false);
-      }
-    }, 600);
-  };
 
   return (
-    <div className="landing-container">
-      <div className="glass-card login-card">
-        <div className="login-header">
-          <div className="logo-container">
-            <img src="/logo.png" alt="School Election Logo" className="logo-img" />
-            <div className="logo-glow"></div>
+    <div className="landing-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem' }}>
+      
+      <div className="login-header" style={{ marginBottom: '3rem', textAlign: 'center', animation: 'slideDown 0.8s ease-out' }}>
+        <div className="logo-container" style={{ margin: '0 auto 1.5rem' }}>
+          <img src="/logo.png" alt="School Election Logo" className="logo-img" />
+          <div className="logo-glow"></div>
+        </div>
+        <h1 className="logo-text" style={{ fontSize: '3rem' }}>
+          School<span className="text-gradient">Election</span>
+        </h1>
+        <p className="subtitle" style={{ fontSize: '1.2rem', marginTop: '0.5rem' }}>Select your portal to continue</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', width: '100%', maxWidth: '1000px', zIndex: 1, animation: 'fadeUp 0.8s ease-out 0.2s backwards' }}>
+        
+        {/* Admin Card */}
+        <div 
+          onClick={() => navigate('/admin/login')}
+          className="glass-card role-card" 
+          style={{ cursor: 'pointer', padding: '2.5rem', transition: 'all 0.3s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-10px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(59,130,246,0.2)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.2)'; }}
+        >
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.5rem', borderRadius: '50%', marginBottom: '1.5rem' }}>
+            <Shield size={48} color="#3b82f6" />
           </div>
-          <h1 className="logo-text">
-            School<span className="text-gradient">Election</span>
-          </h1>
-          <p className="subtitle">Centralised Authentication System</p>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Admin Portal</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', flex: 1 }}>Manage the entire election system, candidates, and global settings.</p>
+          <div style={{ display: 'flex', alignItems: 'center', color: '#3b82f6', fontWeight: 600, gap: '0.5rem' }}>
+            Enter Portal <ChevronRight size={18} />
+          </div>
         </div>
 
-        <form onSubmit={handleLogin} className="login-form">
-          <div className="input-group">
-            <User size={20} className="input-icon left-icon" />
-            <input 
-              type="text" 
-              placeholder="Username" 
-              value={username}
-              onChange={(e) => { setUsername(e.target.value); setError(''); }}
-              required
-              className="premium-input"
-            />
+        {/* Moderator Card */}
+        <div 
+          onClick={() => navigate('/mod/login')}
+          className="glass-card role-card" 
+          style={{ cursor: 'pointer', padding: '2.5rem', transition: 'all 0.3s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-10px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(168,85,247,0.2)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.2)'; }}
+        >
+          <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '1.5rem', borderRadius: '50%', marginBottom: '1.5rem' }}>
+            <Users size={48} color="#a855f7" />
           </div>
-
-          <div className="input-group">
-            <Lock size={20} className="input-icon left-icon" />
-            <input 
-              type={showPassword ? 'text' : 'password'} 
-              placeholder="Password" 
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(''); }}
-              required
-              className="premium-input"
-            />
-            <button 
-              type="button"
-              className="toggle-password" 
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
-            </button>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Moderator Desk</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', flex: 1 }}>Verify students and authorize active voting sessions at your booth.</p>
+          <div style={{ display: 'flex', alignItems: 'center', color: '#a855f7', fontWeight: 600, gap: '0.5rem' }}>
+            Enter Desk <ChevronRight size={18} />
           </div>
-
-          {error && <div className="error-text animate-shake">{error}</div>}
-
-          <div className="form-options">
-            <label className="custom-checkbox">
-              <input type="checkbox" />
-              <span className="checkmark"></span>
-              <span className="checkbox-label">Remember me</span>
-            </label>
-            <a href="#" className="forgot-link">Forgot password?</a>
-          </div>
-
-          <button type="submit" className="primary-btn" disabled={isLoading}>
-            {isLoading ? (
-              <div className="spinner"></div>
-            ) : (
-              <>
-                <LogIn size={20} /> 
-                <span>Sign In</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="divider">
-          <span>OR</span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <select 
-            value={selectedBooth} 
-            onChange={(e) => setSelectedBooth(e.target.value)}
-            className="premium-input"
-            style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-color)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', outline: 'none', fontSize: '1rem', width: '100%', appearance: 'none', cursor: 'pointer' }}
-          >
-            {booths && booths.map(b => (
-              <option key={b.id} value={b.id}>{b.name} ({b.location})</option>
-            ))}
-          </select>
-
-          <button 
-            className="secondary-btn launch-terminal-btn"
-            onClick={() => navigate(`/vote/${selectedBooth}`)}
-            type="button"
-          >
-            <Shield size={18} className="btn-icon" />
-            <span>Launch Voting Terminal</span>
-            <ArrowRight size={18} className="btn-icon-right" />
-          </button>
+        {/* Voter Card */}
+        <div 
+          onClick={() => navigate('/voter/login')}
+          className="glass-card role-card" 
+          style={{ cursor: 'pointer', padding: '2.5rem', transition: 'all 0.3s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-10px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(16,185,129,0.2)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.2)'; }}
+        >
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '50%', marginBottom: '1.5rem' }}>
+            <Vote size={48} color="#10b981" />
+          </div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Voting Kiosk</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', flex: 1 }}>Cast your secure ballot after verification from a moderator.</p>
+          <div style={{ display: 'flex', alignItems: 'center', color: '#10b981', fontWeight: 600, gap: '0.5rem' }}>
+            Enter Kiosk <ChevronRight size={18} />
+          </div>
         </div>
 
       </div>
 
-      <div className="page-footer">
+      <div className="page-footer" style={{ marginTop: '4rem' }}>
         © 2026 School Election System. Secure, transparent, and democratic.
       </div>
     </div>

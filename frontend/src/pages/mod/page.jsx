@@ -1,11 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, AlertTriangle, Activity, Users, Flag, UserCheck, MonitorPlay, RefreshCcw, ChevronRight, Clock, Zap, CheckCircle2, Lock } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Activity, Users, Flag, UserCheck, MonitorPlay, RefreshCcw, ChevronRight, Clock, Zap, CheckCircle2, Lock, MonitorUp, MonitorOff } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
+import { useElection } from '@/context/ElectionContext';
+import './mod.css';
 
 export default function ModDashboard() {
   const navigate = useNavigate();
   const { kioskStatus, activeStudent, isLockdown, toggleLockdown, booths, roster, auditLogs } = useKioskContext();
+  const { totalVotes, isPublished, togglePublish } = useElection();
 
   const verifiedToday = roster.filter(s => s.status === 'voted').length;
   const eligibleCount = roster.filter(s => s.status === 'eligible').length;
@@ -65,22 +68,43 @@ export default function ModDashboard() {
           </p>
         </div>
 
-        {/* Emergency Lockdown */}
-        <button
-          onClick={toggleLockdown}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px',
-            fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit',
-            border: isLockdown ? 'none' : '1px solid rgba(239,68,68,0.25)',
-            background: isLockdown ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239,68,68,0.06)',
-            color: isLockdown ? '#fff' : '#ef4444',
-            boxShadow: isLockdown ? '0 6px 20px rgba(239,68,68,0.3)' : 'none',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          {isLockdown ? <Lock size={18} /> : <AlertTriangle size={18} />}
-          {isLockdown ? 'LIFT LOCKDOWN' : 'EMERGENCY FREEZE'}
-        </button>
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {/* Push to Portal */}
+          <button 
+            className="btn" 
+            onClick={totalVotes >= 10 ? togglePublish : undefined} 
+            disabled={totalVotes < 10}
+            style={{ 
+              background: isPublished ? 'rgba(5,150,105,0.05)' : '#fafbfc', 
+              color: totalVotes < 10 ? '#94a3b8' : (isPublished ? '#059669' : '#64748b'), 
+              borderRadius: '12px', border: isPublished ? '1px solid rgba(5,150,105,0.12)' : '1px solid var(--border-color)', 
+              fontSize: '0.85rem', cursor: totalVotes < 10 ? 'not-allowed' : 'pointer', fontWeight: 700, fontFamily: 'inherit', padding: '10px 20px',
+              display: 'flex', alignItems: 'center', gap: '8px', opacity: totalVotes < 10 ? 0.7 : 1, transition: 'all 0.2s ease'
+            }}
+            title={totalVotes < 10 ? "Requires at least 10 votes to ensure anonymity" : "Publish live results to the public portal"}
+          >
+            {isPublished ? <MonitorOff size={18} /> : <MonitorUp size={18} />} 
+            {totalVotes < 10 ? `NEED 10 VOTES (${totalVotes}/10)` : (isPublished ? 'UNPUBLISH' : 'PUSH TO PORTAL')}
+          </button>
+
+          {/* Emergency Lockdown */}
+          <button
+            onClick={toggleLockdown}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px',
+              fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit',
+              border: isLockdown ? 'none' : '1px solid rgba(239,68,68,0.25)',
+              background: isLockdown ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(239,68,68,0.06)',
+              color: isLockdown ? '#fff' : '#ef4444',
+              boxShadow: isLockdown ? '0 6px 20px rgba(239,68,68,0.3)' : 'none',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            {isLockdown ? <Lock size={18} /> : <AlertTriangle size={18} />}
+            {isLockdown ? 'LIFT LOCKDOWN' : 'EMERGENCY FREEZE'}
+          </button>
+        </div>
       </div>
 
       {/* Lockdown Banner */}
@@ -101,16 +125,7 @@ export default function ModDashboard() {
         {dashboardStats.map((stat, i) => (
           <div 
             key={i}
-            style={{ 
-              padding: '1.25rem',
-              background: '#fff',
-              border: '1px solid var(--border-color)',
-              borderRadius: '14px',
-              transition: 'all 0.3s ease',
-              cursor: 'default'
-            }}
-            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(0,0,0,0.05)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            className="mod-stat-card"
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
               <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{stat.title}</p>
@@ -127,7 +142,7 @@ export default function ModDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
         
         {/* Quick Actions */}
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+        <div className="mod-panel">
           <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)' }}>
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Zap size={18} color="#3b82f6" /> Quick Actions
@@ -160,7 +175,7 @@ export default function ModDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="mod-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Activity size={18} color="#8b5cf6" /> Recent Activity
@@ -207,7 +222,7 @@ export default function ModDashboard() {
       </div>
 
       {/* ─── Kiosk Status Strip ─── */}
-      <div style={{ marginTop: '1.25rem', background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+      <div className="mod-panel" style={{ marginTop: '1.25rem' }}>
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <MonitorPlay size={18} color="#10b981" /> Terminal Overview

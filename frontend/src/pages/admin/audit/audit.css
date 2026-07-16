@@ -1,0 +1,49 @@
+.audit-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.audit-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.audit-table-header th {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  padding: 1rem;
+}
+
+.audit-row:hover {
+  background: var(--surface-hover);
+}
+
+.audit-col-type, .audit-col-timestamp, .audit-col-message, .audit-col-hash {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+.audit-type-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audit-hash {
+  font-family: monospace;
+  background: var(--surface-hover);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

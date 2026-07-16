@@ -1,13 +1,18 @@
 import { useState, useRef, useMemo } from 'react';
 import { Card } from '@/components/common/Card';
-import { Upload, Search, Plus, Trash2, X, ChevronLeft, ChevronRight, CheckSquare, Square, Download, Key } from 'lucide-react';
+import { Upload, Search, Plus, Trash2, X, ChevronLeft, ChevronRight, CheckSquare, Square, Users } from 'lucide-react';
 import { useKioskContext } from '@/context/KioskContext';
+import { useElection } from '@/context/ElectionContext';
+import '../dashboard.css';
 
 export default function ManageStudents() {
-  const { roster: students, setRoster: setStudents, generateCredentials } = useKioskContext();
+  const { roster: students, setRoster: setStudents } = useKioskContext();
+  const { advancedSettings } = useElection();
+  
+  const availableGrades = advancedSettings?.availableGrades || ['9th', '10th', '11th', '12th'];
 
   const [showModal, setShowModal] = useState(false);
-  const [newStudent, setNewStudent] = useState({ id: '', name: '', grade: '10th' });
+  const [newStudent, setNewStudent] = useState({ id: '', name: '', grade: availableGrades[0] });
   
   // Table State
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,33 +77,6 @@ export default function ManageStudents() {
     }
   };
 
-  const handleGenerateCredentials = () => {
-    if (selectedVoters.size > 0) {
-      if(window.confirm(`Generate new credentials for ${selectedVoters.size} selected voters? (Existing credentials will NOT be overwritten)`)) {
-        generateCredentials(selectedVoters);
-        setSelectedVoters(new Set());
-      }
-    } else {
-      if(window.confirm(`Generate new credentials for ALL voters without one?`)) {
-        generateCredentials(null);
-      }
-    }
-  };
-
-  const downloadCredentialsCSV = () => {
-    const header = "Voter ID,Name,Grade,Voting Code\n";
-    const rows = students.map(s => `${s.id},"${s.name}",${s.grade},${s.credential || 'NONE'}`).join('\n');
-    const csvContent = header + rows;
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `voter_credentials_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   const handleCSVImport = (e) => {
     const file = e.target.files[0];
@@ -173,15 +151,27 @@ export default function ManageStudents() {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header">
+    <>
+      <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+      
+      {/* ─── Header ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem' }}>
         <div>
-          <h1>Manage Voters</h1>
-          <p>View the voter roster, add manually, or upload CSV lists.</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.025em', color: '#0f172a', margin: '0 0 4px 0' }}>
+            Voter Registry
+          </h1>
+          <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0 }}>
+            Manage voter roster — add manually or upload CSV
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn btn-secondary" onClick={() => setShowModal(true)}>
-            <Plus size={18} />
+        
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button 
+            onClick={() => setShowModal(true)} 
+            className="btn btn-secondary"
+            style={{ padding: '7px 14px', fontSize: '0.8rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '5px' }}
+          >
+            <Plus size={15} />
             Add Voter
           </button>
           <input 
@@ -191,14 +181,18 @@ export default function ManageStudents() {
             ref={fileInputRef} 
             onChange={handleCSVImport}
           />
-          <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()}>
-            <Upload size={18} />
+          <button 
+            onClick={() => fileInputRef.current?.click()} 
+            className="btn"
+            style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '7px 14px', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: 'inherit' }}
+          >
+            <Upload size={15} />
             Import CSV
           </button>
         </div>
       </div>
 
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="dashboard-panel">
         {/* Toolbar */}
         <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color)' }}>
           <div className="form-control" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '320px', background: 'var(--surface-hover)', borderRadius: '8px', padding: '10px 16px' }}>
@@ -212,25 +206,13 @@ export default function ManageStudents() {
             />
           </div>
 
-          {selectedVoters.size > 0 ? (
+          {selectedVoters.size > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                 <strong>{selectedVoters.size}</strong> selected
               </span>
-              <button className="btn btn-secondary" onClick={handleGenerateCredentials} style={{ padding: '8px 16px' }}>
-                <Key size={16} /> Generate PINs
-              </button>
               <button className="btn btn-danger" onClick={handleBulkDelete} style={{ padding: '8px 16px' }}>
                 <Trash2 size={16} /> Bulk Delete
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button className="btn btn-secondary" onClick={handleGenerateCredentials} style={{ padding: '8px 16px' }}>
-                <Key size={16} /> Generate PINs
-              </button>
-              <button className="btn btn-secondary" onClick={downloadCredentialsCSV} style={{ padding: '8px 16px' }}>
-                <Download size={16} /> Export CSV
               </button>
             </div>
           )}
@@ -247,7 +229,6 @@ export default function ManageStudents() {
                 <th onClick={() => handleSort('id')}>Voter ID <SortIcon field="id" /></th>
                 <th onClick={() => handleSort('name')}>Name <SortIcon field="name" /></th>
                 <th onClick={() => handleSort('grade')}>Grade <SortIcon field="grade" /></th>
-                <th onClick={() => handleSort('credential')}>PIN <SortIcon field="credential" /></th>
                 <th onClick={() => handleSort('status')}>Status <SortIcon field="status" /></th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -255,7 +236,7 @@ export default function ManageStudents() {
             <tbody>
               {currentItems.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No voters found matching your criteria.</td>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No voters found matching your criteria.</td>
                 </tr>
               ) : currentItems.map(s => (
                 <tr key={s.id} className={selectedVoters.has(s.id) ? 'selected' : ''}>
@@ -265,13 +246,6 @@ export default function ManageStudents() {
                   <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{s.id}</td>
                   <td style={{ fontWeight: 600 }}>{s.name}</td>
                   <td>{s.grade}</td>
-                  <td>
-                    {s.credential ? (
-                      <span style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '2px', color: 'var(--accent)', background: 'var(--surface-hover)', padding: '4px 8px', borderRadius: '6px' }}>{s.credential}</span>
-                    ) : (
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>None</span>
-                    )}
-                  </td>
                   <td>
                     {s.status === 'voted' ? (
                       <span className="badge active">Voted</span>
@@ -315,12 +289,13 @@ export default function ManageStudents() {
             </button>
           </div>
         </div>
-      </Card>
+        </div>
+      </div>
 
       {/* Add Voter Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
-          <Card style={{ width: '400px', padding: '2rem', margin: '0' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}>
+          <div className="dashboard-panel" style={{ width: '400px', padding: '2.5rem', animation: 'fadeIn 0.2s ease-out', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Add Voter</h2>
               <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
@@ -354,16 +329,15 @@ export default function ManageStudents() {
               </div>
 
               <div className="form-group">
-                <label>Grade</label>
+                <label>Grade / Class</label>
                 <select 
                   className="form-control"
                   value={newStudent.grade}
                   onChange={e => setNewStudent({...newStudent, grade: e.target.value})}
                 >
-                  <option value="9th">9th Grade</option>
-                  <option value="10th">10th Grade</option>
-                  <option value="11th">11th Grade</option>
-                  <option value="12th">12th Grade</option>
+                  {availableGrades.map(grade => (
+                    <option key={grade} value={grade}>{grade} Class</option>
+                  ))}
                 </select>
               </div>
 
@@ -372,9 +346,9 @@ export default function ManageStudents() {
                 <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>Save Voter</button>
               </div>
             </form>
-          </Card>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -11,7 +11,7 @@ export default function BallotPage() {
   const navigate = useNavigate();
   const { boothId } = useParams();
   const { setReceipt } = useBallotContext();
-  const { markVoted } = useKioskContext();
+  const { markVoted, activeStudent } = useKioskContext();
   const { positions, candidates, castBallot } = useElection();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [votes, setVotes] = useState({});
@@ -44,21 +44,26 @@ export default function BallotPage() {
     setShowConfirmModal(true);
   };
 
-  const confirmAndSubmit = () => {
+  const confirmAndSubmit = async () => {
     // Gather all selected candidate IDs across all positions
     const selectedCandidateIds = Object.values(votes).flat();
     
     // Cast the vote securely into the global ledger (ElectionContext)
-    castBallot(selectedCandidateIds);
+    const success = await castBallot(selectedCandidateIds, activeStudent);
 
-    // Generate Cryptographic Receipt Hash
-    const randomHash = '#' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-    setReceipt(randomHash);
-    
-    // Finalize the Kiosk Session with booth context
-    markVoted(boothId);
-    setShowConfirmModal(false);
-    navigate(`/vote/${boothId}/receipt`);
+    if (success) {
+      // Generate Cryptographic Receipt Hash
+      const randomHash = '#' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+      setReceipt(randomHash);
+      
+      // Finalize the Kiosk Session with booth context
+      markVoted(boothId);
+      setShowConfirmModal(false);
+      navigate(`/vote/${boothId}/receipt`);
+    } else {
+      alert("Failed to cast vote. You may have already voted.");
+      setShowConfirmModal(false);
+    }
   };
 
   const totalPositions = ballotData.length;

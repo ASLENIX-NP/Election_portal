@@ -7,10 +7,16 @@ export function KioskProvider({ children }) {
   const [kioskStatus, setKioskStatus] = useState('idle'); // 'idle', 'voting', 'completed'
   
   // Advanced Mod Features
-  const [isLockdown, setIsLockdown] = useState(false);
-  const [auditLogs, setAuditLogs] = useState([
-    { id: 1, type: 'system', desc: 'System Initialized', time: new Date().toISOString(), by: 'System' }
-  ]);
+  const [isLockdown, setIsLockdown] = useState(() => {
+    const saved = localStorage.getItem('kioskLockdown');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [auditLogs, setAuditLogs] = useState(() => {
+    const saved = localStorage.getItem('kioskAudit');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, type: 'system', desc: 'System Initialized', time: new Date().toISOString(), by: 'System' }
+    ];
+  });
 
   const logAction = (type, desc, by = 'System') => {
     setAuditLogs(prev => [{ id: Date.now(), type, desc, time: new Date().toISOString(), by }, ...prev]);
@@ -28,86 +34,124 @@ export function KioskProvider({ children }) {
   };
   
   // Voting Booths Management
-  const [booths, setBooths] = useState([
-    { id: 'booth-01', name: 'Terminal Alpha', location: 'Main Hall', status: 'idle' },
-    { id: 'booth-02', name: 'Terminal Beta', location: 'Main Hall', status: 'offline' },
-    { id: 'booth-03', name: 'Terminal Gamma', location: 'Annex Hall', status: 'idle' },
-    { id: 'booth-04', name: 'Terminal Delta', location: 'Annex Hall', status: 'offline' }
-  ]);
+  const [booths, setBooths] = useState([]);
+  
+  useEffect(() => {
+    const fetchBooths = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/booths');
+        if (res.ok) setBooths(await res.json());
+      } catch (err) {
+        console.error("Failed to fetch booths:", err);
+      }
+    };
+    fetchBooths();
+  }, []);
   
   const expirationTimer = useRef(null);
 
-  const mockRoster = [];
-  const firstNames = ['James', 'Mary', 'Robert', 'Patricia', 'John', 'Jennifer', 'Michael', 'Linda', 'David', 'Elizabeth', 'William', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen'];
-  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-  const grades = ['9th', '10th', '11th', '12th'];
-  
-  for(let i=1001; i<=1050; i++) {
-    mockRoster.push({
-      id: `PASS-${i}`,
-      name: `${firstNames[i%firstNames.length]} ${lastNames[i%lastNames.length]}`,
-      grade: grades[i%grades.length],
-      status: 'eligible'
-    });
-  }
-
-  const getInitialRoster = () => {
-    const stored = localStorage.getItem('electionRoster');
-    if (stored) {
-      try { return JSON.parse(stored); } catch (e) { }
-    }
-    return mockRoster;
-  };
-
-  const [roster, setRoster] = useState(getInitialRoster);
+  const [roster, setRoster] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem('electionRoster', JSON.stringify(roster));
-  }, [roster]);
+    const fetchRoster = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/students');
+        if (res.ok) setRoster(await res.json());
+      } catch (err) {
+        console.error("Failed to fetch roster:", err);
+      }
+    };
+    
+    // Fetch immediately
+    fetchRoster();
+    
+    // Poll every 3 seconds to keep roster synced across tabs
+    const interval = setInterval(fetchRoster, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+
+
+  useEffect(() => {
+    localStorage.setItem('kioskAudit', JSON.stringify(auditLogs));
+  }, [auditLogs]);
 
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === 'electionRoster' && e.newValue) {
-        try {
-          setRoster(JSON.parse(e.newValue));
-        } catch(err) {}
-      }
+      try {
+        if (e.key === 'electionRoster' && e.newValue) setRoster(JSON.parse(e.newValue));
+        if (e.key === 'kioskBooths' && e.newValue) setBooths(JSON.parse(e.newValue));
+        if (e.key === 'kioskLockdown' && e.newValue) setIsLockdown(JSON.parse(e.newValue));
+        if (e.key === 'kioskAudit' && e.newValue) setAuditLogs(JSON.parse(e.newValue));
+      } catch(err) {}
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const addBooth = (newBooth) => {
-    setBooths([...booths, { ...newBooth, id: `booth-${Date.now()}`, status: 'offline' }]);
-    logAction('info', `Added new terminal: ${newBooth.name}`);
+  const addBooth = async (newBooth) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/booths', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBooth)
+      });
+      if (res.ok) {
+        const added = await res.json();
+        setBooths([...booths, added]);
+        logAction('info', `Added new terminal: ${added.name}`);
+      }
+    } catch(err) { console.error(err); }
   };
 
-  const removeBooth = (boothId) => {
-    const booth = booths.find(b => b.id === boothId);
-    setBooths(booths.filter(b => b.id !== boothId));
-    logAction('warning', `Removed terminal: ${booth?.name}`);
+  const removeBooth = async (boothId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/booths/${boothId}`, { method: 'DELETE' });
+      if (res.ok) {
+        const booth = booths.find(b => b.id === boothId);
+        setBooths(booths.filter(b => b.id !== boothId));
+        logAction('warning', `Removed terminal: ${booth?.name}`);
+      }
+    } catch(err) { console.error(err); }
   };
 
-  const updateBoothStatus = (boothId, newStatus) => {
-    if (isLockdown) return; // Prevent status changes during lockdown
-    const booth = booths.find(b => b.id === boothId);
-    setBooths(booths.map(b => b.id === boothId ? { ...b, status: newStatus } : b));
-    logAction('info', `Terminal ${booth?.name} status changed to ${newStatus}`, 'Moderator');
+  const updateBoothStatus = async (boothId, newStatus) => {
+    if (isLockdown) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/booths/${boothId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        const booth = booths.find(b => b.id === boothId);
+        setBooths(booths.map(b => b.id === boothId ? { ...b, status: newStatus } : b));
+        logAction('info', `Terminal ${booth?.name} status changed to ${newStatus}`, 'Moderator');
+      }
+    } catch(err) { console.error(err); }
   };
 
-  const enableVoting = (studentId, boothId) => {
+  const enableVoting = async (studentId, boothId) => {
     if (isLockdown) return null;
-    
-    // Persist to localStorage for the specific booth
-    localStorage.setItem(`activeStudent_${boothId}`, studentId);
-    
-    logAction('security', `Authorized Voting Pass: ${studentId} for ${boothId}`, 'Moderator');
+    try {
+      await fetch(`http://localhost:5000/api/booths/${boothId}/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId })
+      });
+      logAction('security', `Authorized Voting Pass: ${studentId} for ${boothId}`, 'Moderator');
+      // Update local state for immediate feedback
+      setBooths(booths.map(b => b.id === boothId ? { ...b, status: 'voting', activeStudentSession: studentId } : b));
+    } catch(err) { console.error(err); }
   };
 
-  const cancelVoting = (boothId) => {
+  const cancelVoting = async (boothId) => {
     if (boothId) {
-       localStorage.removeItem(`activeStudent_${boothId}`);
-       logAction('warning', `Force-terminated active session at ${boothId}`, 'Moderator');
+      try {
+        await fetch(`http://localhost:5000/api/booths/${boothId}/session`, { method: 'DELETE' });
+        logAction('warning', `Force-terminated active session at ${boothId}`, 'Moderator');
+        setBooths(booths.map(b => b.id === boothId ? { ...b, status: 'idle', activeStudentSession: null } : b));
+      } catch(err) { console.error(err); }
     }
     setActiveStudent(null);
     setKioskStatus('idle');
@@ -132,19 +176,24 @@ export function KioskProvider({ children }) {
     }
   };
 
-  const authenticateVoter = (boothId) => {
+  const authenticateVoter = async (boothId) => {
     if (isLockdown) return false;
     
-    // Read from localStorage specific to this booth
-    const currentStudent = localStorage.getItem(`activeStudent_${boothId}`);
-
-    if (currentStudent) {
-      setKioskStatus('voting');
-      setActiveStudent(currentStudent); // Sync local state
-      
-      logAction('security', `Voter ${currentStudent} successfully authenticated at kiosk ${boothId}.`);
-      return true;
-    }
+    try {
+      // Securely fetch booth session from backend instead of local storage
+      const res = await fetch('http://localhost:5000/api/booths');
+      if (res.ok) {
+        const allBooths = await res.json();
+        const thisBooth = allBooths.find(b => b.id === boothId);
+        
+        if (thisBooth && thisBooth.activeStudentSession) {
+          setKioskStatus('voting');
+          setActiveStudent(thisBooth.activeStudentSession);
+          logAction('security', `Voter ${thisBooth.activeStudentSession} successfully authenticated at kiosk ${boothId}.`);
+          return true;
+        }
+      }
+    } catch(err) { console.error("Auth failed:", err); }
     
     return false;
   };
@@ -163,8 +212,9 @@ export function KioskProvider({ children }) {
     setKioskStatus('completed');
     
     if (boothId) {
-      localStorage.removeItem(`activeStudent_${boothId}`);
-      updateBoothStatus(boothId, 'idle');
+      // Clear session securely from backend
+      fetch(`http://localhost:5000/api/booths/${boothId}/session`, { method: 'DELETE' }).catch(console.error);
+      setBooths(booths.map(b => b.id === boothId ? { ...b, status: 'idle', activeStudentSession: null } : b));
     }
     
     // Automatically reset kiosk to idle after 5 seconds

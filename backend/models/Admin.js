@@ -30,6 +30,12 @@ const adminSchema = new mongoose.Schema(
       default: "admin",
     },
 
+    themePreference: {
+      type: String,
+      enum: ["light", "dark"],
+      default: "light",
+    },
+
     isActive: {
       type: Boolean,
       default: true,

@@ -34,6 +34,12 @@ const moderatorSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    themePreference: {
+      type: String,
+      enum: ["light", "dark"],
+      default: "light",
+    },
   },
   {
     timestamps: true,

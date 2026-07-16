@@ -1,0 +1,72 @@
+/* mod.css */
+.mod-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+body.light-theme .mod-panel {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.mod-stat-card {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+
+body.light-theme .mod-stat-card {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.mod-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.08);
+}
+
+.mod-booth-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+body.light-theme .mod-booth-card {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.mod-booth-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.mod-map-booth {
+  width: 170px;
+  padding: 1.5rem 1rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  cursor: default;
+}

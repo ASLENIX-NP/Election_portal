@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useKioskContext } from '@/context/KioskContext';
 import { MonitorPlay, ShieldAlert, Power, Zap, ChevronRight, Laptop, LayoutGrid, Map as MapIcon, AlertTriangle, Wifi, WifiOff, User, XCircle } from 'lucide-react';
+import '../mod.css';
 
 export default function ModBoothsPage() {
   const { booths, updateBoothStatus, activeStudent, enableVoting, cancelVoting, isLockdown, roster } = useKioskContext();
@@ -11,9 +12,10 @@ export default function ModBoothsPage() {
   const onlineCount = booths.filter(b => b.status !== 'offline').length;
   const offlineCount = booths.filter(b => b.status === 'offline').length;
 
-  // Check if a booth has an active session via localStorage
+  // Check if a booth has an active session via context
   const getBoothSession = (boothId) => {
-    try { return localStorage.getItem(`activeStudent_${boothId}`); } catch { return null; }
+    const booth = booths.find(b => b.id === boothId);
+    return booth ? booth.activeStudentSession : null;
   };
 
   return (
@@ -90,14 +92,7 @@ export default function ModBoothsPage() {
             const statusBg = isLockdown ? 'rgba(239,68,68,0.06)' : isOffline ? '#f8fafc' : hasSession ? 'rgba(245,158,11,0.06)' : 'rgba(16,185,129,0.06)';
 
             return (
-              <div key={booth.id} style={{ 
-                background: '#fff', borderRadius: '14px', border: '1px solid var(--border-color)', 
-                overflow: 'hidden', transition: 'all 0.3s ease',
-                opacity: isLockdown ? 0.7 : isOffline ? 0.6 : 1
-              }}
-                onMouseOver={(e) => { if (!isLockdown) { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(0,0,0,0.06)'; }}}
-                onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-              >
+              <div key={booth.id} className="mod-booth-card" style={{ opacity: isLockdown ? 0.7 : isOffline ? 0.6 : 1 }}>
                 {/* Status Bar */}
                 <div style={{ height: '3px', background: statusColor }}></div>
                 
@@ -218,7 +213,7 @@ export default function ModBoothsPage() {
         </div>
       ) : (
         /* ─── Floor Plan View ─── */
-        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+        <div className="mod-panel">
           <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <MapIcon size={18} color="#3b82f6" />
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Polling Room Layout</h3>
@@ -234,14 +229,10 @@ export default function ModBoothsPage() {
                 const statusLabel = isLockdown ? 'LOCKED' : isOffline ? 'OFFLINE' : hasSession ? 'IN USE' : 'READY';
 
                 return (
-                  <div key={booth.id} style={{
-                    width: '170px', padding: '1.5rem 1rem', background: '#fff',
-                    borderRadius: '14px', border: `2px solid ${statusColor}30`,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                  <div key={booth.id} className="mod-map-booth" style={{
+                    border: `2px solid ${statusColor}30`,
                     boxShadow: `0 4px 16px ${statusColor}10`,
-                    transition: 'all 0.3s ease',
                     opacity: isOffline && !isLockdown ? 0.5 : 1,
-                    cursor: 'default'
                   }}
                     onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${statusColor}20`; }}
                     onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 16px ${statusColor}10`; }}

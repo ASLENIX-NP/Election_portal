@@ -1,0 +1,557 @@
+/* portal.css - High-End Light Executive Live Results Portal */
+
+.portal-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  position: relative;
+  overflow: hidden;
+  color: #0f172a;
+}
+
+/* Soft light radial glows for subtle elegance */
+.portal-bg-glows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.45;
+}
+
+.bg-glow.blue {
+  top: -10%;
+  left: 5%;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+}
+
+.bg-glow.purple {
+  bottom: -10%;
+  right: 5%;
+  width: 45vw;
+  height: 45vw;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+}
+
+/* ─────────────────────────────────────────────
+   Waiting Mode / Results Not Yet Published
+   ───────────────────────────────────────────── */
+.portal-container.waiting-mode {
+  justify-content: center;
+  align-items: center;
+}
+
+.waiting-screen {
+  z-index: 1;
+  max-width: 500px;
+  width: 90%;
+  padding: 3.5rem 2.5rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 10px 30px -10px rgba(0, 0, 0, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.02);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.portal-logo-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.portal-logo-badge .shield-icon {
+  color: #06b6d4;
+}
+
+.pulse-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+  animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); transform: scale(0.97); }
+  70% { box-shadow: 0 0 0 20px rgba(37, 99, 235, 0); transform: scale(1.03); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); transform: scale(0.97); }
+}
+
+.portal-main-heading {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  margin-bottom: 0.75rem;
+}
+
+.portal-sub-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+.waiting-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.notice-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d97706;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+/* ─────────────────────────────────────────────
+   Live Results Mode Layout
+   ───────────────────────────────────────────── */
+.portal-header {
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.5rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.live-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.15);
+  padding: 4px 10px;
+  border-radius: 99px;
+  width: fit-content;
+  margin-bottom: 10px;
+}
+
+.live-pulse {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #059669;
+  animation: pulse-live 1.8s infinite;
+}
+
+@keyframes pulse-live {
+  0% { transform: scale(0.9); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.4; }
+  100% { transform: scale(0.9); opacity: 1; }
+}
+
+.live-text {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #059669;
+}
+
+.portal-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.portal-subtitle-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.header-stats-group {
+  display: flex;
+  gap: 12px;
+}
+
+/* Stat Card */
+.portal-stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.stat-card-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card-icon-wrapper.blue { background: rgba(37, 99, 235, 0.06); color: #2563eb; }
+.stat-card-icon-wrapper.green { background: rgba(5, 150, 105, 0.06); color: #059669; }
+
+.stat-card-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.stat-card-value-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.stat-card-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.stat-card-badge.positive {
+  background: rgba(5, 150, 105, 0.06);
+  color: #059669;
+}
+
+/* ─────────────────────────────────────────────
+   Main Content Area
+   ───────────────────────────────────────────── */
+.portal-content {
+  z-index: 1;
+  flex: 1;
+  padding: 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.75rem;
+}
+
+.position-result-panel {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.02),
+    0 2px 4px -2px rgba(0, 0, 0, 0.02);
+}
+
+.position-panel-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.position-panel-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.position-subtitle-meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.position-votes-badge {
+  background: rgba(0, 0, 0, 0.04);
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.portal-candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Standings Rows - Table-Like Minimalism */
+.portal-candidate-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-candidate-row.winner-highlight {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.04) 0%, transparent 100%);
+  border-color: rgba(251, 191, 36, 0.15);
+}
+
+/* Rank Badge */
+.portal-rank-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  margin-right: 12px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.portal-rank-badge.rank-1 {
+  background: rgba(251, 191, 36, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.winner-crown {
+  color: #d97706;
+}
+
+/* Avatar styling */
+.portal-candidate-avatar-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+  background: #ffffff;
+  z-index: 1;
+}
+
+.portal-candidate-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Details and progress bar column */
+.portal-candidate-standing-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1;
+}
+
+.portal-candidate-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.portal-candidate-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.winner-label-badge {
+  font-size: 0.6rem;
+  background: rgba(217, 119, 6, 0.08);
+  color: #d97706;
+  border: 1px solid rgba(217, 119, 6, 0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.portal-candidate-numbers {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.vote-number {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.vote-separator {
+  color: #cbd5e1;
+}
+
+.vote-percent {
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Clean Professional Progress Track */
+.portal-progress-track {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.portal-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.portal-empty-standings {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.portal-empty-standings .empty-icon {
+  opacity: 0.4;
+}
+
+.portal-empty-standings p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* ─────────────────────────────────────────────
+   Secure Footer
+   ───────────────────────────────────────────── */
+.portal-secure-footer {
+  z-index: 1;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  display: flex;
+  justify-content: center;
+}
+
+.secure-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.secure-badge span {
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 640px) {
+  .portal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+  }
+  .portal-content {
+    padding: 1.5rem 1rem;
+  }
+  .header-stats-group {
+    width: 100%;
+  }
+  .portal-stat-card {
+    flex: 1;
+  }
+}

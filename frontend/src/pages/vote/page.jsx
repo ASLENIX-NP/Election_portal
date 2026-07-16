@@ -12,19 +12,21 @@ export default function VoteLogin() {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   React.useEffect(() => {
-    const checkAuth = () => {
-      setIsAuthorized(!!localStorage.getItem(`activeStudent_${boothId}`));
+    const checkAuth = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/booths`);
+        if (res.ok) {
+          const allBooths = await res.json();
+          const thisBooth = allBooths.find(b => b.id === boothId);
+          setIsAuthorized(!!(thisBooth && thisBooth.activeStudentSession));
+        }
+      } catch (err) { console.error(err); }
     };
     checkAuth();
     
-    // Check periodically in case localStorage events don't fire properly or for same-browser testing
-    const interval = setInterval(checkAuth, 1000);
-    window.addEventListener('storage', checkAuth);
+    const interval = setInterval(checkAuth, 2000); // Check every 2 seconds
     
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', checkAuth);
-    };
+    return () => clearInterval(interval);
   }, [boothId]);
 
   const handleStart = (e) => {

@@ -10,25 +10,35 @@ export function ElectionProvider({ children }) {
   // Dashboard Live State
   const [totalVotes, setTotalVotes] = useState(0);
   const [totalEligible, setTotalEligible] = useState(50); // Set to 50 to match the generated mockRoster
+  const [isPublished, setIsPublished] = useState(false);
   
-  const [candidates, setCandidates] = useState([
-    { id: 1, name: 'John Doe', position: 'President', votes: 0, color: '#3b82f6', avatar: 'JD' },
-    { id: 2, name: 'Jane Smith', position: 'President', votes: 0, color: '#8b5cf6', avatar: 'JS' },
-    { id: 11, name: 'Michael Chen', position: 'President', votes: 0, color: '#10b981', avatar: 'MC' },
-    { id: 3, name: 'Alice W.', position: 'Vice President', votes: 0, color: '#06b6d4', avatar: 'AW' },
-    { id: 4, name: 'Bob M.', position: 'Vice President', votes: 0, color: '#f59e0b', avatar: 'BM' },
-    { id: 5, name: 'Emma Watson', position: 'Student Council Representatives', votes: 0, color: '#ec4899', avatar: 'EW' },
-    { id: 6, name: 'LeBron James', position: 'Student Council Representatives', votes: 0, color: '#f43f5e', avatar: 'LJ' },
-    { id: 7, name: 'Serena W.', position: 'Student Council Representatives', votes: 0, color: '#8b5cf6', avatar: 'SW' },
-    { id: 8, name: 'Tom Holland', position: 'Student Council Representatives', votes: 0, color: '#3b82f6', avatar: 'TH' },
-    { id: 9, name: 'Zendaya', position: 'Student Council Representatives', votes: 0, color: '#10b981', avatar: 'Z' }
-  ]);
+  const togglePublish = () => {
+    setIsPublished(prev => {
+      const next = !prev;
+      const channel = new BroadcastChannel('election_sync');
+      channel.postMessage({ type: 'SET_PUBLISHED', payload: next });
+      channel.close();
+      return next;
+    });
+  };
+  
+  const [candidates, setCandidates] = useState([]);
+  const [positions, setPositions] = useState([]);
 
-  const [positions, setPositions] = useState([
-    { id: 1, title: 'President', maxVotes: 1 },
-    { id: 2, title: 'Vice President', maxVotes: 1 },
-    { id: 3, title: 'Student Council Representatives', maxVotes: 4 },
-  ]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const posRes = await fetch('http://localhost:5000/api/positions');
+        if (posRes.ok) setPositions(await posRes.json());
+
+        const candRes = await fetch('http://localhost:5000/api/candidates');
+        if (candRes.ok) setCandidates(await candRes.json());
+      } catch (err) {
+        console.error("Failed to fetch election data:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const [trendData, setTrendData] = useState([]);
 
@@ -44,11 +54,33 @@ export function ElectionProvider({ children }) {
   ]);
 
   useEffect(() => {
-    const savedTitle = localStorage.getItem('electionTitle');
-    if (savedTitle) setElectionTitle(savedTitle);
-    
-    const savedYear = localStorage.getItem('academicYear');
-    if (savedYear) setAcademicYear(savedYear);
+    const fetchData = async () => {
+      try {
+        const settingsRes = await fetch('http://localhost:5000/api/elections/settings');
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          setElectionTitle(settings.title);
+          setStatus(settings.status);
+        }
+
+        const modsRes = await fetch('http://localhost:5000/api/moderators');
+        if (modsRes.ok) setModerators(await modsRes.json());
+      } catch (err) {
+        console.error("Failed to fetch settings/mods:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Sync across tabs
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      try {
+        if (e.key === 'electionModerators' && e.newValue) setModerators(JSON.parse(e.newValue));
+      } catch(err) {}
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const [advancedSettings, setAdvancedSettings] = useState({
@@ -60,11 +92,19 @@ export function ElectionProvider({ children }) {
     voterReceipts: true,
     strictAnonymity: true,
     brandColor: '#3b82f6',
-    schoolLogo: ''
+    schoolLogo: '',
+    eligibleGrades: ['9th', '10th', '11th', '12th'],
+    availableGrades: ['9th', '10th', '11th', '12th']
   });
 
   const updateAdvancedSettings = (newSettings) => {
-    setAdvancedSettings(prev => ({ ...prev, ...newSettings }));
+    setAdvancedSettings(prev => {
+      const next = { ...prev, ...newSettings };
+      const channel = new BroadcastChannel('election_sync');
+      channel.postMessage({ type: 'SET_ADVANCED_SETTINGS', payload: next });
+      channel.close();
+      return next;
+    });
   };
 
   // Automated Election Scheduling Logic
@@ -105,11 +145,16 @@ export function ElectionProvider({ children }) {
     return () => clearInterval(interval);
   }, [advancedSettings.scheduledVoting, advancedSettings.startTime, advancedSettings.endTime, status]);
 
-  const updateElectionConfig = (title, year) => {
+  const updateElectionConfig = async (title, year) => {
     setElectionTitle(title);
     setAcademicYear(year);
-    localStorage.setItem('electionTitle', title);
-    localStorage.setItem('academicYear', year);
+    try {
+      await fetch('http://localhost:5000/api/elections/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+    } catch(err) { console.error(err); }
   };
 
   const processCsvData = (csvText) => {
@@ -187,36 +232,90 @@ export function ElectionProvider({ children }) {
       { name: 'Grade 12', value: 0 },
     ]);
     setTrendData([]);
+    setIsPublished(false);
+    setIsPublished(false);
     setRecentActivity([{ id: Date.now(), type: 'alert', message: 'All election data has been reset', time: 'Just now', hash: 'sys_reset' }]);
   };
 
-  const castBallot = (candidateIds) => {
-    setTotalVotes(prev => prev + 1);
+  useEffect(() => {
+    const channel = new BroadcastChannel('election_sync');
+    channel.onmessage = (event) => {
+      const { type, payload } = event.data;
+      if (type === 'VOTE_CAST') {
+        applyVoteLocally(payload.candidateIds, payload.timeStr, payload.hash);
+      } else if (type === 'SET_PUBLISHED') {
+        setIsPublished(payload);
+      } else if (type === 'SET_ADVANCED_SETTINGS') {
+        setAdvancedSettings(payload);
+      }
+    };
+    return () => channel.close();
+  }, []);
+
+  const applyVoteLocally = (candidateIds, timeStr, hash) => {
+    setTotalVotes(prev => {
+      const nextTotal = prev + 1;
+      setTrendData(prevTrend => {
+        if (prevTrend.length > 0 && prevTrend[prevTrend.length - 1].time === timeStr) {
+            return [...prevTrend.slice(0, -1), { time: timeStr, votes: prevTrend[prevTrend.length - 1].votes + 1 }];
+        }
+        return [...prevTrend, { time: timeStr, votes: nextTotal }];
+      });
+      return nextTotal;
+    });
     setCandidates(prev => prev.map(c => {
       if (candidateIds.includes(c.id)) {
         return { ...c, votes: c.votes + 1 };
       }
       return c;
     }));
-    
-    // Add activity log
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setRecentActivity(prev => [
-      { id: Date.now(), type: 'vote', message: 'Vote cast securely via kiosk', time: timeStr, hash: `0x${Math.random().toString(16).substr(2, 8)}` },
+      { id: Date.now() + Math.random(), type: 'vote', message: 'Vote cast securely via kiosk', time: timeStr, hash },
       ...prev.slice(0, 4)
     ]);
-    
-    // Update trend data roughly
-    setTrendData(prev => {
-      if (prev.length > 0 && prev[prev.length - 1].time === timeStr) {
-          return [...prev.slice(0, -1), { time: timeStr, votes: prev[prev.length - 1].votes + 1 }];
-      }
-      return [...prev, { time: timeStr, votes: totalVotes + 1 }];
-    });
   };
 
-  const addPosition = (title, maxVotes) => {
-    setPositions(prev => [...prev, { id: Date.now(), title, maxVotes: parseInt(maxVotes) || 1 }]);
+  const castBallot = async (candidateIds, studentId) => {
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const hash = `0x${Math.random().toString(16).substr(2, 8)}`;
+    
+    try {
+      const res = await fetch('http://localhost:5000/api/votes/cast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateIds, studentId })
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to cast vote');
+      }
+      
+      applyVoteLocally(candidateIds, timeStr, hash);
+      
+      const channel = new BroadcastChannel('election_sync');
+      channel.postMessage({ type: 'VOTE_CAST', payload: { candidateIds, timeStr, hash } });
+      channel.close();
+      
+      return true;
+    } catch(err) {
+      console.error("Failed to cast vote securely:", err.message);
+      return false;
+    }
+  };
+
+  const addPosition = async (title, maxVotes) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/positions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, maxVotes: parseInt(maxVotes) || 1 })
+      });
+      if (res.ok) {
+        const newPos = await res.json();
+        setPositions(prev => [...prev, newPos]);
+      }
+    } catch(err) { console.error("Failed to add position", err); }
   };
 
   const updatePosition = (id, title, maxVotes) => {
@@ -246,27 +345,31 @@ export function ElectionProvider({ children }) {
     setCandidates(prev => prev.filter(c => c.id !== id));
   };
 
-  const [moderators, setModerators] = useState([
-    { id: 1, name: 'Mr. Anderson', email: 'anderson@school.edu', role: 'Chief Moderator', photoUrl: '', color: '#3b82f6', avatar: 'MA' },
-    { id: 2, name: 'Mrs. Davis', email: 'davis@school.edu', role: 'Station Monitor', photoUrl: '', color: '#8b5cf6', avatar: 'MD' },
-  ]);
+  const [moderators, setModerators] = useState([]);
 
-  const addModerator = (modData) => {
-    const newMod = {
-      ...modData,
-      id: Date.now(),
-      avatar: modData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
-      color: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#06b6d4'][Math.floor(Math.random() * 6)]
-    };
-    setModerators(prev => [...prev, newMod]);
+  const addModerator = async (modData) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/moderators', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modData)
+      });
+      if (res.ok) {
+        const newMod = await res.json();
+        setModerators(prev => [...prev, newMod]);
+      }
+    } catch(err) { console.error(err); }
   };
 
   const updateModerator = (id, modData) => {
     setModerators(prev => prev.map(m => m.id === id ? { ...m, ...modData } : m));
   };
 
-  const deleteModerator = (id) => {
-    setModerators(prev => prev.filter(m => m.id !== id));
+  const deleteModerator = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/moderators/${id}`, { method: 'DELETE' });
+      if (res.ok) setModerators(prev => prev.filter(m => m.id !== id));
+    } catch(err) { console.error(err); }
   };
 
   return (
@@ -277,7 +380,8 @@ export function ElectionProvider({ children }) {
       addCandidate, updateCandidate, deleteCandidate,
       moderators, addModerator, updateModerator, deleteModerator,
       advancedSettings, updateAdvancedSettings,
-      processCsvData, resetData, castBallot
+      processCsvData, resetData, castBallot,
+      isPublished, togglePublish
     }}>
       {children}
     </ElectionContext.Provider>
