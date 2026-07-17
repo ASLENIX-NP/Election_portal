@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
 
 const ElectionContext = createContext();
 
@@ -24,6 +25,45 @@ export function ElectionProvider({ children }) {
   
   const [candidates, setCandidates] = useState([]);
   const [positions, setPositions] = useState([]);
+  
+  // Real-time socket connection
+  useEffect(() => {
+    const socket = io('http://localhost:5000');
+    
+    socket.on('newVote', (data) => {
+      // Refresh candidates data to get latest votes
+      const fetchData = async () => {
+        try {
+          const candRes = await fetch('http://localhost:5000/api/candidates');
+          if (candRes.ok) setCandidates(await candRes.json());
+        } catch (err) {
+          console.error("Failed to fetch updated candidates:", err);
+        }
+      };
+      fetchData();
+      
+      setTotalVotes(prev => {
+        const nextTotal = prev + 1;
+        const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        setTrendData(prevTrend => {
+          if (prevTrend.length > 0 && prevTrend[prevTrend.length - 1].time === timeStr) {
+            return [...prevTrend.slice(0, -1), { time: timeStr, votes: prevTrend[prevTrend.length - 1].votes + 1 }];
+          }
+          return [...prevTrend, { time: timeStr, votes: nextTotal }];
+        });
+        
+        return nextTotal;
+      });
+      
+      setRecentActivity(prev => [
+        { id: Date.now() + Math.random(), type: 'vote', message: 'New vote recorded via Kiosk', time: 'Just now', hash: `0x${Math.random().toString(16).substr(2, 8)}` },
+        ...prev.slice(0, 4)
+      ]);
+    });
+
+    return () => socket.disconnect();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {

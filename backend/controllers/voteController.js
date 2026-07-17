@@ -23,6 +23,12 @@ const castVote = async (req, res) => {
     // In a full implementation, create a secure Vote record here for audit
     // await Vote.create({ student: student._id, candidates: candidateIds, ... })
 
+    // Emit real-time update
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("newVote", { studentId, timestamp: new Date() });
+    }
+
     res.status(200).json({ message: "Vote cast successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
