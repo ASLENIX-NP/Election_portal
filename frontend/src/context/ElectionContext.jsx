@@ -198,9 +198,11 @@ export function ElectionProvider({ children }) {
   };
 
   const processCsvData = (csvText) => {
-    // Simple CSV parser assuming format: Timestamp,Grade,PresidentChoice,VPChoice
-    const rows = csvText.split('\n').map(r => r.trim()).filter(r => r && !r.startsWith('Timestamp'));
-    if (rows.length === 0) return;
+    const lines = csvText.split('\n').map(r => r.trim()).filter(Boolean);
+    if (lines.length < 2) return;
+
+    const headers = lines[0].split(',');
+    const rows = lines.slice(1);
 
     // Reset counts for streaming
     setTotalVotes(0);
@@ -224,15 +226,29 @@ export function ElectionProvider({ children }) {
             return;
         }
 
-        const [ts, grade, pres, vp] = rows[currentIndex].split(',');
+        const cols = rows[currentIndex].split(',');
         currentIndex++;
+
+        if (cols.length < 2) continue;
+
+        const grade = cols[1];
 
         setTotalVotes(prev => prev + 1);
 
         setCandidates(prev => prev.map(c => {
-          if (c.position === 'President' && c.name.toLowerCase().includes(pres.toLowerCase())) return { ...c, votes: c.votes + 1 };
-          if (c.position === 'Vice President' && c.name.toLowerCase().includes(vp.toLowerCase())) return { ...c, votes: c.votes + 1 };
-          return c;
+          // Dynamic matching
+          let newVotes = c.votes;
+          for (let colIdx = 2; colIdx < headers.length; colIdx++) {
+            const posTitle = headers[colIdx].replace(/ /g, '');
+            const voteVal = cols[colIdx] || '';
+            
+            // Check if this candidate matches the position and name
+            if (c.position.replace(/ /g, '') === posTitle && 
+                c.name.toLowerCase().includes(voteVal.toLowerCase()) && voteVal !== 'None') {
+              newVotes += 1;
+            }
+          }
+          return { ...c, votes: newVotes };
         }));
 
         setDemoData(prev => {

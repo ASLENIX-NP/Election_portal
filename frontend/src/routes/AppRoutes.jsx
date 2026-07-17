@@ -7,7 +7,6 @@ import VoteLayout from '@/layouts/VoteLayout';
 
 // Pages
 import AdminDashboard from '@/pages/admin/page';
-import ManageCandidates from '@/pages/admin/candidates/page';
 import ManageStudents from '@/pages/admin/students/page';
 import ManageModerators from '@/pages/admin/moderators/page';
 import AdminSettings from '@/pages/admin/settings/page';

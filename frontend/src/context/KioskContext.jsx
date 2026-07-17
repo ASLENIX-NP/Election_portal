@@ -70,6 +70,51 @@ export function KioskProvider({ children }) {
     return () => clearInterval(interval);
   }, []);
 
+  const addVoter = async (student) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(student)
+      });
+      if (res.ok) {
+        const added = await res.json();
+        setRoster(prev => [...prev, added]);
+        logAction('info', `Added new voter: ${added.name}`);
+      } else {
+        alert("Failed to add voter (maybe ID already exists)");
+      }
+    } catch(err) { console.error(err); }
+  };
+
+  const removeVoter = async (studentId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/students/${studentId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setRoster(prev => prev.filter(s => s.id !== studentId));
+        logAction('warning', `Removed voter: ${studentId}`);
+      }
+    } catch(err) { console.error(err); }
+  };
+
+  const bulkAddVoters = async (students) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/students/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students })
+      });
+      if (res.ok) {
+        setRoster(prev => {
+          const existingIds = new Set(prev.map(s => s.id));
+          const uniqueNewVoters = students.filter(v => !existingIds.has(v.id));
+          return [...prev, ...uniqueNewVoters];
+        });
+        logAction('info', `Bulk imported ${students.length} voters`);
+      }
+    } catch(err) { console.error(err); }
+  };
+
 
 
   useEffect(() => {
@@ -228,7 +273,8 @@ export function KioskProvider({ children }) {
       activeStudent, kioskStatus, roster, booths, setRoster,
       isLockdown, toggleLockdown, auditLogs, logAction,
       enableVoting, cancelVoting, authenticateVoter, markVoted, setKioskStatus,
-      addBooth, removeBooth, updateBoothStatus, generateCredentials
+      addBooth, removeBooth, updateBoothStatus, generateCredentials,
+      addVoter, removeVoter, bulkAddVoters
     }}>
       {children}
     </KioskContext.Provider>

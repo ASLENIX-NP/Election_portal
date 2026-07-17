@@ -69,7 +69,7 @@ export default function CandidateModal({ candidate, onClose }) {
           }}></div>
           
           <img 
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random&color=fff&size=120`} 
+            src={candidate.photoUrl || candidate.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random&color=fff&size=120`} 
             alt={candidate.name}
             style={{ 
               width: '100px', height: '100px', borderRadius: '24px', 
@@ -94,15 +94,15 @@ export default function CandidateModal({ candidate, onClose }) {
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
               <MessageSquareQuote size={18} />
-              Campaign Slogan
+              About Candidate
             </h3>
             <p style={{ 
-              fontSize: '1.25rem', fontStyle: 'italic', color: 'var(--text-primary)', 
+              fontSize: '1.05rem', color: 'var(--text-primary)', 
               background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '16px', 
               borderLeft: '4px solid var(--accent-cyan)', margin: 0,
               boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)'
             }}>
-              "{candidate.slogan}"
+              {candidate.manifesto || `I am running for ${candidate.position} to make a positive impact and represent the student body of the ${candidate.grade} grade.`}
             </p>
           </div>
 
@@ -111,7 +111,7 @@ export default function CandidateModal({ candidate, onClose }) {
               <Target size={18} /> Platform & Goals
             </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {candidate.platform.map((point, idx) => (
+              {(candidate.platform || ['Improve student life', 'Enhance campus facilities', 'Increase student engagement']).map((point, idx) => (
                 <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', color: 'var(--text-primary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
                   <div style={{ marginTop: '4px', color: 'var(--success)' }}>
                     <CheckCircle size={18} />

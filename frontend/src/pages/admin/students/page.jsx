@@ -6,7 +6,7 @@ import { useElection } from '@/context/ElectionContext';
 import '../dashboard.css';
 
 export default function ManageStudents() {
-  const { roster: students, setRoster: setStudents } = useKioskContext();
+  const { roster: students, addVoter, removeVoter: removeVoterFromApi, bulkAddVoters } = useKioskContext();
   const { advancedSettings } = useElection();
   
   const availableGrades = advancedSettings?.availableGrades || ['9th', '10th', '11th', '12th'];
@@ -27,14 +27,14 @@ export default function ManageStudents() {
   const handleAddStudent = (e) => {
     e.preventDefault();
     if (!newStudent.name || !newStudent.id) return;
-    setStudents([...students, { ...newStudent, status: 'eligible' }]);
+    addVoter({ ...newStudent, status: 'eligible' });
     setShowModal(false);
     setNewStudent({ id: '', name: '', grade: '10th' });
   };
 
   const removeStudent = (id) => {
     if(window.confirm('Are you sure you want to remove this voter?')) {
-      setStudents(students.filter(s => s.id !== id));
+      removeVoterFromApi(id);
       setSelectedVoters(prev => {
         const newSet = new Set(prev);
         newSet.delete(id);
@@ -46,7 +46,7 @@ export default function ManageStudents() {
   const handleBulkDelete = () => {
     if(selectedVoters.size === 0) return;
     if(window.confirm(`Are you sure you want to remove ${selectedVoters.size} voters?`)) {
-      setStudents(students.filter(s => !selectedVoters.has(s.id)));
+      selectedVoters.forEach(id => removeVoterFromApi(id)); // In a real app we'd have a bulk delete API, but this loop suffices for MVP.
       setSelectedVoters(new Set());
     }
   };
@@ -101,12 +101,8 @@ export default function ManageStudents() {
         }
         
         if (newVoters.length > 0) {
-          setStudents(prev => {
-            const existingIds = new Set(prev.map(s => s.id));
-            const uniqueNewVoters = newVoters.filter(v => !existingIds.has(v.id));
-            return [...prev, ...uniqueNewVoters];
-          });
-          alert(`Successfully imported ${newVoters.length} voters.`);
+          bulkAddVoters(newVoters);
+          alert(`Importing ${newVoters.length} voters...`);
         } else {
           alert('No valid rows found in CSV. Expected format: ID,Name,Grade');
         }

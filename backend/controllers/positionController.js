@@ -29,4 +29,33 @@ const createPosition = async (req, res) => {
   }
 };
 
-module.exports = { getPositions, createPosition };
+const updatePosition = async (req, res) => {
+  try {
+    const { title, maxVotes } = req.body;
+    const position = await Position.findByIdAndUpdate(
+      req.params.id,
+      { title, maxWinners: maxVotes },
+      { new: true }
+    );
+    if (!position) return res.status(404).json({ message: "Position not found" });
+    res.json({
+      id: position._id,
+      title: position.title,
+      maxVotes: position.maxWinners
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const deletePosition = async (req, res) => {
+  try {
+    const position = await Position.findByIdAndDelete(req.params.id);
+    if (!position) return res.status(404).json({ message: "Position not found" });
+    res.json({ message: "Position deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+module.exports = { getPositions, createPosition, updatePosition, deletePosition };
